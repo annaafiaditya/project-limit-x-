@@ -331,7 +331,7 @@
 
 @push('scripts')
 <script>
-    // Scroll position management for Mikrobiologi
+
     function saveScrollPosition(action, entryId = null) {
         const scrollData = {
             action: action,
@@ -344,46 +344,40 @@
     function restoreScrollPosition() {
         const saved = localStorage.getItem('mikrobiologi_scroll_position');
         if (!saved) return;
-        
         const scrollData = JSON.parse(saved);
         const now = Date.now();
-        
-        // Hanya restore jika dalam 30 detik terakhir
+
         if (now - scrollData.timestamp > 30000) {
             localStorage.removeItem('mikrobiologi_scroll_position');
             return;
         }
-        
+
         setTimeout(() => {
             if (scrollData.action === 'add_entry') {
-                // Scroll ke form input data entry
                 const inputForm = document.getElementById('form-entry');
                 if (inputForm) {
-                    // Scroll ke form dengan offset untuk memastikan terlihat
                     const rect = inputForm.getBoundingClientRect();
                     const scrollTop = window.pageYOffset + rect.top - 100;
                     window.scrollTo({ top: scrollTop, behavior: 'smooth' });
                 } else {
-                    // Fallback: scroll ke form entry area
                     const formArea = document.querySelector('.dynamic-card');
                     if (formArea) {
                         formArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 }
             } else if (scrollData.action === 'edit_entry') {
-                // Scroll ke daftar entry
+
                 const entriesTable = document.querySelector('.dynamic-table');
                 if (entriesTable) {
                     entriesTable.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }
-            
-            // Clear saved position after use
+
             localStorage.removeItem('mikrobiologi_scroll_position');
         }, 1000);
     }
 
-    // Restore scroll position on page load
+
     document.addEventListener('DOMContentLoaded', function() {
         restoreScrollPosition();
     });
@@ -433,7 +427,7 @@ if (formKolom) {
         return false;
     }
 }
-// Intercept add entry to stay on page
+
 const formEntry = document.getElementById('form-entry');
 if (formEntry) {
     formEntry.addEventListener('submit', function(e){
@@ -454,7 +448,7 @@ if (formEntry) {
             if (!ok || !json || !json.id) { formEntry.removeEventListener('submit', arguments.callee); formEntry.submit(); return; }
             const tbody = document.getElementById('entry-tbody');
             if (!tbody) { 
-                // Jika tidak ada tbody, buat tabel baru
+
                 const tableContainer = document.querySelector('.dynamic-card.mb-6');
                 if (tableContainer && !tableContainer.querySelector('table')) {
                     const table = document.createElement('table');
@@ -485,7 +479,7 @@ if (formEntry) {
             tbody.appendChild(tr);
             showNotif('Entry berhasil ditambah', 'success');
             formEntry.reset();
-            // Keep view at the form and focus the first input
+
             const rect = formEntry.getBoundingClientRect();
             const top = window.pageYOffset + rect.top - 100;
             window.scrollTo({ top: top, behavior: 'smooth' });
@@ -501,10 +495,10 @@ function addKolomRow(col) {
     tr.id = 'kolom-row-' + col.id;
     tr.innerHTML = `<td class='kolom-nama'>${col.nama_kolom}</td><td class='kolom-tipe'>${col.tipe_kolom.charAt(0).toUpperCase()+col.tipe_kolom.slice(1)}</td><td><button type='button' class='action-btn action-btn-edit' data-id='${col.id}'>Edit</button><button type='button' class='action-btn action-btn-delete' data-id='${col.id}' onclick='return false;'>Hapus</button></td>`;
     tbody.appendChild(tr);
-    // Tambahkan input baru ke form entry
+
     const formEntry = document.getElementById('form-entry');
     if (formEntry) {
-        // Cari sebelum tombol submit
+
         const submitBtn = formEntry.querySelector('button[type="submit"]');
         const div = document.createElement('div');
         div.className = 'mb-2 me-2';
@@ -518,7 +512,7 @@ function addKolomRow(col) {
         formEntry.insertBefore(div, submitBtn);
     }
 }
-// Event delegation untuk hapus kolom
+
 const kolomTbody = document.getElementById('kolom-tbody');
 if (kolomTbody) {
     kolomTbody.addEventListener('click', function(e) {
@@ -541,7 +535,6 @@ if (kolomTbody) {
         .then(({ok, json}) => {
             if (ok) {
                 tr.remove();
-                // Hapus input di form entry (cari div input berdasarkan input name)
                 const formEntry = document.getElementById('form-entry');
                 if (formEntry) {
                     const input = formEntry.querySelector(`[name="data[${id}]"]`);
@@ -559,12 +552,12 @@ if (kolomTbody) {
         return false;
     });
 }
-// Inline edit kolom
+
 document.addEventListener('DOMContentLoaded', function() {
     const kolomTbody = document.getElementById('kolom-tbody');
     if (!kolomTbody) return;
     kolomTbody.addEventListener('click', function(e) {
-        // Edit
+
         const editBtn = e.target.closest('button.action-btn-edit');
         if (editBtn) {
             const id = editBtn.dataset.id;
@@ -582,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `<td><button type='button' class='action-btn action-btn-save' data-id='${id}'>Simpan</button>` +
                 `<button type='button' class='action-btn action-btn-cancel' data-id='${id}'>Batal</button></td>`;
         }
-        // Simpan
+
         const saveBtn = e.target.closest('button.action-btn-save');
         if (saveBtn) {
             const id = saveBtn.dataset.id;
@@ -603,15 +596,15 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(({ok, json}) => {
                 if (ok) {
                     tr.innerHTML = `<td class='kolom-nama'>${json.nama_kolom}</td><td class='kolom-tipe'>${json.tipe_kolom.charAt(0).toUpperCase()+json.tipe_kolom.slice(1)}</td><td><button type='button' class='action-btn action-btn-edit' data-id='${id}'>Edit</button><button type='button' class='action-btn action-btn-delete' data-id='${id}' onclick='return false;'>Hapus</button></td>`;
-                    // Update input di form entry
+
                     const formEntry = document.getElementById('form-entry');
                     if (formEntry) {
                         const input = formEntry.querySelector(`[name="data[${id}]"]`);
                         if (input) {
-                            // Update label
+
                             const label = input.parentNode.querySelector('label');
                             if (label) label.innerText = json.nama_kolom;
-                            // Update tipe input
+
                             if (json.tipe_kolom === 'string') input.type = 'text';
                             else if (json.tipe_kolom === 'integer') input.type = 'number';
                             else if (json.tipe_kolom === 'decimal') { input.type = 'number'; input.step = '0.01'; }
@@ -628,22 +621,22 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(err => showNotif(err.message, 'danger'));
         }
-        // Batal
+
         const cancelBtn = e.target.closest('button.action-btn-cancel');
         if (cancelBtn) {
             const id = cancelBtn.dataset.id;
             const tr = document.getElementById('kolom-row-' + id);
-            // Reload ulang halaman (atau bisa fetch ulang data kolom jika ingin lebih dinamis)
+
             location.reload();
         }
     });
 });
-// Handler hapus entry via AJAX (final fix, return false, log bubbling)
+
 document.addEventListener('DOMContentLoaded', function() {
     const entryTbody = document.getElementById('entry-tbody');
     if (!entryTbody) return;
     entryTbody.addEventListener('click', function(e) {
-        // Hapus Entry
+
         const delBtn = e.target.closest('.entry-delete-btn');
         if (delBtn) {
             const id = delBtn.dataset.id;
@@ -677,22 +670,21 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             return false;
         }
-        // Edit Entry
+
         const editBtn = e.target.closest('.entry-edit-btn');
         if (editBtn) {
             const id = editBtn.dataset.id;
             const row = document.getElementById('entry-row-' + id);
             if (!row) return;
-            // Simpan data lama
+
             const oldData = [];
             row.querySelectorAll('.entry-col').forEach(td => oldData.push(td.innerText));
-            // Ganti ke input
+
             @foreach($columns as $col)
             row.querySelector('.entry-col[data-col-id="{{ $col->id }}"]').innerHTML = `<input type='{{ $col->tipe_kolom === 'integer' ? 'number' : ($col->tipe_kolom === 'decimal' ? 'number' : ($col->tipe_kolom === 'date' ? 'date' : ($col->tipe_kolom === 'time' ? 'time' : 'text'))) }}' class='dynamic-input entry-edit-input' value='${row.querySelector('.entry-col[data-col-id="{{ $col->id }}"]').innerText}' data-col-id='{{ $col->id }}' {{ $col->tipe_kolom === 'decimal' ? 'step="0.01"' : '' }}>`;
             @endforeach
-            // Ganti tombol aksi
+
             row.querySelector('td:last-child').innerHTML = `<button type='button' class='entry-save-btn dynamic-btn action-btn-save' data-id='${id}'>Simpan</button><button type='button' class='entry-cancel-btn dynamic-btn action-btn-cancel' data-id='${id}'>Batal</button>`;
-            // Handler Simpan
             row.querySelector('.entry-save-btn').onclick = function() {
                 const data = {};
                 row.querySelectorAll('.entry-edit-input').forEach(input => {
@@ -714,14 +706,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(json => {
                     if (json.success || json.updated) {
-                        // Update tampilan baris
                         @foreach($columns as $col)
                         row.querySelector('.entry-col[data-col-id="{{ $col->id }}"]').innerText = data['{{ $col->id }}'];
                         @endforeach
                         row.querySelector('td:last-child').innerHTML = `<button type='button' class='entry-edit-btn dynamic-btn action-btn-edit' data-id='${id}'>Edit</button><button type='button' class='entry-delete-btn dynamic-btn action-btn-delete' data-id='${id}'>Hapus</button>`;
                         showNotif('Entry berhasil diupdate', 'success');
-                        
-                        // Save scroll position for edit entry
+
                         saveScrollPosition('edit_entry', id);
                     } else {
                         showNotif(json.message || 'Gagal update entry', 'danger');
@@ -732,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error(err);
                 });
             };
-            // Handler Batal
+
             row.querySelector('.entry-cancel-btn').onclick = function() {
                 let i = 0;
                 row.querySelectorAll('.entry-col').forEach(td => { td.innerText = oldData[i++]; });

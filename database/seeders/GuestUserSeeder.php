@@ -14,7 +14,6 @@ class GuestUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create guest user
         User::create([
             'name' => 'Guest User',
             'email' => 'guest@futami.com',

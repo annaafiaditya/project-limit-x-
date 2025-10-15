@@ -2,7 +2,6 @@
 
 @section('content')
 
-<!-- Animated Background -->
 <div class="animated-background">
     <div class="floating-circles">
         <div class="circle circle-1"></div>
@@ -42,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('Dashboard data received:', data);
             
-            // Donut chart judul form
+
             const ctx = document.getElementById('judulDonutChart').getContext('2d');
             new Chart(ctx, {
                 type: 'doughnut',
@@ -65,21 +64,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Entry count
+
             document.getElementById('entryCount').textContent = data.entry_count || 0;
 
-            // Total forms
+
             document.getElementById('totalForms').textContent = data.total_forms || 0;
 
-            // Approval pending
+
             const approvalBtn = document.getElementById('approvalPendingBtn');
             approvalBtn.textContent = data.approval_pending || 0;
             approvalBtn.onclick = function() {
                 window.location.href = "{{ route('mikrobiologi-forms.index') }}?approval=pending";
             };
 
-            // KIMIA widgets
-            // Donut Kimia judul
+            // ini kimia
             const ctxKimia = document.getElementById('kimiaJudulDonutChart').getContext('2d');
             new Chart(ctxKimia, {
                 type: 'doughnut',
@@ -100,13 +98,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Entry count Kimia
             document.getElementById('kimiaEntryCount').textContent = data.kimia_entry_count || 0;
 
-            // Total forms Kimia
             document.getElementById('kimiaTotalForms').textContent = data.kimia_total_forms || 0;
 
-            // Approval pending Kimia
             const approvalKimiaBtn = document.getElementById('kimiaApprovalPendingBtn');
             approvalKimiaBtn.textContent = data.kimia_approval_pending || 0;
             approvalKimiaBtn.onclick = function() {
@@ -115,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error fetching dashboard data:', error);
-            // Set default values if fetch fails
+
             document.getElementById('entryCount').textContent = '0';
             document.getElementById('totalForms').textContent = '0';
             document.getElementById('approvalPendingBtn').textContent = '0';
@@ -127,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showNotif(message, type) {
         console.log('Showing notification:', message, type);
-        // Create notification element
+
         const notif = document.createElement('div');
         notif.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
         notif.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
@@ -135,11 +130,10 @@ document.addEventListener('DOMContentLoaded', function() {
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        
+
         document.body.appendChild(notif);
         console.log('Notification added to DOM');
-        
-        // Auto remove after 3 seconds
+
         setTimeout(() => {
             if (notif.parentNode) {
                 notif.remove();
@@ -148,7 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    // General Note Functionality
     function loadGeneralNote() {
         fetch("{{ route('general-note.show') }}")
             .then(res => {
@@ -159,11 +152,9 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 console.log('General note data received:', data);
-                
-                // Set content
+
                 document.getElementById('generalNoteContent').value = data.content || '';
-                
-                // Set last edited info
+
                 const lastEditedText = document.getElementById('lastEditedText');
                 if (data.last_editor_name && data.last_edited_at) {
                     const editedDate = new Date(data.last_edited_at);
@@ -174,13 +165,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         hour: '2-digit',
                         minute: '2-digit'
                     });
-                    
+
                     const roleNames = {
                         'supervisor': 'QA Supervisor',
                         'staff': 'QA Staff',
                         'technician': 'QA Lab. Technician'
                     };
-                    
+
                     const roleName = roleNames[data.last_edited_role] || data.last_edited_role;
                     lastEditedText.textContent = `Terakhir diedit oleh ${data.last_editor_name} (${roleName}) pada ${formattedDate}`;
                 } else {
@@ -224,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // General Note Form Handler
+
     document.getElementById('generalNoteForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -233,8 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const content = document.getElementById('generalNoteContent').value;
         
         console.log('Submitting general note with content:', content);
-        
-        // Disable button and show loading
+
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menyimpan...';
         
@@ -242,20 +232,19 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 console.log('General note saved successfully:', data);
                 
-                // Check if it's an error response
+
                 if (data.error) {
                     throw new Error(data.error);
                 }
                 
-                // Show success alert
+
                 alertDiv.className = 'alert alert-success mt-3';
                 alertDiv.style.display = 'block';
                 alertDiv.innerHTML = `
                     <i class="bi bi-check-circle me-2"></i>${data.message || 'Catatan berhasil disimpan'}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" onclick="this.parentElement.style.display='none'"></button>
                 `;
-                
-                // Update last编辑信息
+
                 if (data.last_edited_at && data.last_editor_name) {
                     const editedDate = new Date(data.last_edited_at);
                     const formattedDate = editedDate.toLocaleString('id-ID', {
@@ -265,31 +254,31 @@ document.addEventListener('DOMContentLoaded', function() {
                         hour: '2-digit',
                         minute: '2-digit'
                     });
-                    
+
                     const roleNames = {
                         'supervisor': 'QA Supervisor',
                         'staff': 'QA Staff',
                         'technician': 'QA Lab. Technician'
                     };
-                    
+
                     const roleName = roleNames[data.last_edited_role] || data.last_edited_role;
                     document.getElementById('lastEditedText').textContent = `Terakhir diedit oleh ${data.last_editor_name} (${roleName}) pada ${formattedDate}`;
                 }
-                
-                // Auto hide alert after 3 seconds
+
+
                 setTimeout(() => {
                     alertDiv.style.display = 'none';
                 }, 3000);
             })
             .catch(error => {
                 console.error('Error saving general note:', error);
-                
-                // Show error alert with more details
+
+
                 let errorMessage = 'Gagal menyimpan catatan. Silakan coba lagi.';
                 if (error.message) {
                     errorMessage = error.message;
                 }
-                
+
                 alertDiv.className = 'alert alert-danger mt-3';
                 alertDiv.style.display = 'block';
                 alertDiv.innerHTML = `
@@ -298,16 +287,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             })
             .finally(() => {
-                // Re-enable button
+
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '<i class="bi bi-save me-1"></i>Simpan';
             });
     });
 
-    // Load general note on page load
+
     loadGeneralNote();
 
-    // Personal Note Functionality
+
     function savePersonalNote(content) {
         const csrfToken = document.querySelector('meta[name="csrf-token"]');
         
@@ -339,51 +328,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Personal Note Form Handler
+
     document.getElementById('personalNoteForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const saveBtn = document.getElementById('personalNoteSaveBtn');
         const alertDiv = document.getElementById('personalNoteAlert');
         const content = document.getElementById('personalNoteContent').value;
-        
+
         console.log('Submitting personal note with content:', content);
-        
-        // Disable button and show loading
+
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menyimpan...';
-        
+
         savePersonalNote(content)
             .then(data_json => {
                 console.log('Personal note saved successfully:', data_json);
-                
-                // Check if it's an error response
+
                 if (data_json.error) {
                     throw new Error(data_json.error);
                 }
-                
-                // Show success alert
+
                 alertDiv.className = 'alert alert-success mt-2';
                 alertDiv.style.display = 'block';
                 alertDiv.innerHTML = `
                     <i class="bi bi-check-circle me-2"></i>${data_json.message || 'Catatan pribadi berhasil disimpan'}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" onclick="this.parentElement.style.display='none'"></button>
                 `;
-                
-                // Auto hide alert after 3 seconds
+
                 setTimeout(() => {
                     alertDiv.style.display = 'none';
                 }, 3000);
             })
             .catch(error => {
                 console.error('Error saving personal note:', error);
-                
-                // Show error alert with more details
+
                 let errorMessage = 'Gagal menyimpan catatan pribadi. Silakan coba lagi.';
                 if (error.message) {
                     errorMessage = error.message;
                 }
-                
+
                 alertDiv.className = 'alert alert-danger mt-2';
                 alertDiv.style.display = 'block';
                 alertDiv.innerHTML = `
@@ -392,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             })
             .finally(() => {
-                // Re-enable button
+
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '<i class="bi bi-save me-1"></i>Simpan';
             });
@@ -409,12 +393,11 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="alert alert-danger mb-4 mx-auto" style="max-width: 900px;">{{ session('error') }}</div>
     @endif
     <div class="row justify-content-center">
-        <!-- Hero Section -->
+
         <div class="col-12 col-lg-10 mb-4 fade-slide-up">
             <div class="d-flex flex-column flex-md-row align-items-center justify-content-between p-4 p-md-5 shadow-lg hero-dashboard-card" 
                 style="border-radius: 2rem; background: linear-gradient(120deg, #e0f7fa 0%, #f8fafc 100%); border: 1.5px solid #e0e7ef; box-shadow: 0 8px 32px #0001;">
-                
-                <!-- Teks Sambutan -->
+
                 <div class="mb-4 mb-md-0 text-center text-md-start flex-grow-1">
                     <h1 class="fw-bold text-success mb-3" style="font-size: 2.6rem; letter-spacing: 0.5px; text-shadow: 0 2px 6px #b6f0e6;">
                         Selamat Datang, <span class="text-dark">"{{ Auth::user()->name }}"</span>!
@@ -433,7 +416,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
-        <!-- Petunjuk Penggunaan -->
         <div class="col-12 col-lg-10 mb-4 fade-slide-up fade-slide-up-delay-1">
     <div class="card shadow border-0" style="border-radius: 1.3rem; background: linear-gradient(120deg, #f1f5f9 0%, #f8fafc 100%);">
         <div class="card-body px-4 py-5">
@@ -468,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 
-        <!-- Statistik Mikrobiologi -->
+        <!-- bagiann Statistik untuk Mikrobiologi -->
         <div class="col-12 col-lg-10 mb-4 fade-slide-up fade-slide-up-delay-2">
             <div class="row g-3 align-items-stretch">
                 <div class="col-12 col-md-4">
@@ -540,7 +522,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
-        <!-- Quick Actions (Mikrobiologi kiri, Kimia kanan) -->
         <div class="col-12 col-lg-10 mb-4 fade-slide-up fade-slide-up-delay-3">
             <div class="row g-3">
                 <div class="col-12 col-md-6">
@@ -579,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
 
 
-        <!-- Catatan General (di atas catatan pribadi) -->
+        <!-- bagian atatan General -->
         @if(Auth::user()->canPerformActions())
         <div class="col-12 col-lg-10 mb-4 fade-slide-up fade-slide-up-delay-4">
             <div class="card shadow border-0 p-4" style="border-radius:1.3rem; background: linear-gradient(120deg, #fef3c7 0%, #fef7cd 50%, #f8fafc 100%); border: 1px solid #fbbf24;">
@@ -589,14 +570,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="bi bi-info-circle me-1"></i>Dapat diakses dan diedit oleh semua pengguna
                     </small>
                 </h4>
-                
+
                 <div id="generalNoteContainer">
                     <form id="generalNoteForm">
                         @csrf
                         <textarea id="generalNoteContent" name="content" class="form-control mb-3" rows="4" 
-                                  placeholder="Tulis catatan general di sini..." 
-                                  style="border-radius:1rem; background:rgba(255,255,255,0.8); font-size:1.05rem; resize:vertical; width:100%; border: 1px solid #fbbf24;"></textarea>
-                        
+                                    placeholder="Tulis catatan general di sini..." 
+                                    style="border-radius:1rem; background:rgba(255,255,255,0.8); font-size:1.05rem; resize:vertical; width:100%; border: 1px solid #fbbf24;"></textarea>
+
                         <div class="d-flex justify-content-between align-items-center">
                             <div id="lastEditedInfo" class="text-muted" style="font-size:0.85rem;">
                                 <i class="bi bi-clock-history me-1"></i>
@@ -608,14 +589,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             </button>
                         </div>
                     </form>
-                    
+
                     <div id="generalNoteAlert" class="alert mt-3" style="display:none; border-radius:1rem; font-size:0.97rem;"></div>
                 </div>
             </div>
         </div>
         @endif
 
-        <!-- Catatan Pribadi (paling bawah) -->
+        <!-- Catatan Pribadi -->
         @if(Auth::user()->canPerformActions())
         <div class="col-12 col-lg-10 mb-4 fade-slide-up fade-slide-up-delay-5">
             <div class="card shadow border-0 p-4" style="border-radius:1.3rem; background:#f8fafc;">
@@ -627,8 +608,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <form id="personalNoteForm">
                         @csrf
                         <textarea id="personalNoteContent" name="note" class="form-control mb-2" rows="5" 
-                                  placeholder="Tulis catatan pribadi di sini..." 
-                                  style="border-radius:1rem; background:#f8fafc; font-size:1.05rem; resize:vertical; width:100%;">{{ trim(old('note', Auth::user()->note ?? '')) }}</textarea>
+                                    placeholder="Tulis catatan pribadi di sini..." 
+                                    style="border-radius:1rem; background:#f8fafc; font-size:1.05rem; resize:vertical; width:100%;">{{ trim(old('note', Auth::user()->note ?? '')) }}</textarea>
                         
                         <div class="text-end">
                             <button type="submit" id="personalNoteSaveBtn" class="btn btn-success px-4 py-2 mt-1" 
@@ -663,7 +644,6 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow:0 8px 32px #34d39933;
 }
 
-/* Animated Background Styles */
 .animated-background {
     position: fixed;
     top: 0;
@@ -915,13 +895,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .circle {
         animation-duration: 25s;
     }
-    
-    .circle-1, .circle-2, .circle-3, .circle-4, .circle-5, .circle-6, 
+
+    .circle-1, .circle-2, .circle-3, .circle-4, .circle-5, .circle-6,
     .circle-7, .circle-8, .circle-9, .circle-10, .circle-11, .circle-12,
     .circle-13, .circle-14, .circle-15, .circle-16, .circle-17, .circle-18,
     .circle-19, .circle-20 {

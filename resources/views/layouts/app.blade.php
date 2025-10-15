@@ -58,7 +58,6 @@
     <body class="font-sans antialiased">
         <div class="min-h-screen">
             @include('layouts.navigation')
-            <!-- Hapus logo/image di bawah navbar jika ada -->
 
             <!-- Page Heading -->
             @isset($header)

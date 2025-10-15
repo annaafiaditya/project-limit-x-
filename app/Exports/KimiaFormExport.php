@@ -83,7 +83,6 @@ class KimiaFormExport implements FromArray, WithStyles, WithTitle, WithColumnWid
             ];
         }
         
-        // Tambahkan No Dokumen di kanan bawah setelah approval
         $approvalRows[] = [''];
         $approvalRows[] = ['', '', '', 'No. Dokumen: ' . ($this->form->no_dokumen ?? '-')];
         
@@ -108,24 +107,22 @@ class KimiaFormExport implements FromArray, WithStyles, WithTitle, WithColumnWid
             'H' => 25,
         ];
     }
-    
+
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
-                
-                // Header styling - Judul utama
+
                 $sheet->mergeCells('A1:E1');
                 $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
                 $sheet->getStyle('A1')->getFill()->setFillType('solid')->getStartColor()->setRGB('dbeafe');
-                // Styling untuk setiap tabel - hanya garis tanpa styling lain
+
                 $currentRow = 6;
                 $tables = $this->form->tables()->with(['columns' => function($q){ $q->orderBy('urutan'); }, 'entries'])->get();
-                
-                // Palet warna untuk membedakan tiap tabel - hanya biru
+
                 $tableColors = [
-                    '3b82f6', // biru
+                    '3b82f6', // biru BIASAA
                     '2563eb', // biru gelap
                     '1d4ed8', // biru lebih gelap
                     '1e40af', // biru sangat gelap
@@ -136,24 +133,19 @@ class KimiaFormExport implements FromArray, WithStyles, WithTitle, WithColumnWid
                 ];
 
                 foreach ($tables as $index => $table) {
-                    // Nama tabel tanpa styling
                     $currentRow += 2;
 
                     $columns = $table->columns;
                     $colCount = count($columns);
                     $colLetterEnd = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colCount);
                     $entryCount = $table->entries()->count();
-                    
-                    // Header tabel tanpa styling
-                    
+
                     if ($entryCount > 0) {
                         $dataEnd = $currentRow + $entryCount;
                         $sheet->getStyle('A'.$currentRow.':'.$colLetterEnd.$dataEnd)->getBorders()->getAllBorders()->setBorderStyle('thin');
                     } else {
                         $sheet->getStyle('A'.$currentRow.':'.$colLetterEnd.$currentRow)->getBorders()->getAllBorders()->setBorderStyle('thin');
                     }
-
-                    // Tambahkan garis atas tambahan (double) dengan warna berbeda untuk tiap tabel
                     $headerRange = 'A'.$currentRow.':'.$colLetterEnd.$currentRow;
                     $colorHex = $tableColors[$index % count($tableColors)];
                     $sheet->getStyle($headerRange)->getBorders()->getTop()
@@ -162,8 +154,7 @@ class KimiaFormExport implements FromArray, WithStyles, WithTitle, WithColumnWid
 
                     $currentRow += $entryCount + 2;
                 }
-                
-                // Set row heights
+
                 $sheet->getRowDimension(1)->setRowHeight(30);
                 $sheet->getRowDimension(5)->setRowHeight(15);
             }

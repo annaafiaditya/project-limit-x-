@@ -379,7 +379,6 @@
         setTimeout(() => notif.style.display = 'none', 2000);
     }
 
-    // Function to get input type for column
     function getInputTypeForColumn(colId) {
         const colElement = document.querySelector(`[data-col-id="${colId}"]`);
         if (colElement) {
@@ -400,7 +399,6 @@
         return { type: 'text', step: false };
     }
 
-    // Scroll position management
     function saveScrollPosition(action, tableId = null, entryId = null) {
         const scrollData = {
             action: action,
@@ -418,7 +416,6 @@
         const scrollData = JSON.parse(saved);
         const now = Date.now();
         
-        // Hanya restore jika dalam 30 detik terakhir
         if (now - scrollData.timestamp > 30000) {
             localStorage.removeItem('kimia_scroll_position');
             return;
@@ -426,22 +423,18 @@
         
         setTimeout(() => {
             if (scrollData.action === 'add_entry' && scrollData.tableId) {
-                // Scroll ke form input data entry
                 const tableContent = document.getElementById('table-content-' + scrollData.tableId);
                 if (tableContent) {
                     const inputForm = tableContent.querySelector('form[action*="kimia-entries.store"]');
                     if (inputForm) {
-                        // Scroll ke form dengan offset untuk memastikan terlihat
                         const rect = inputForm.getBoundingClientRect();
                         const scrollTop = window.pageYOffset + rect.top - 100;
                         window.scrollTo({ top: scrollTop, behavior: 'smooth' });
                     } else {
-                        // Fallback: scroll ke table content
                         tableContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 }
             } else if (scrollData.action === 'edit_entry' && scrollData.tableId) {
-                // Scroll ke daftar entry
                 const tableContent = document.getElementById('table-content-' + scrollData.tableId);
                 if (tableContent) {
                     const entriesTable = tableContent.querySelector('.dynamic-table');
@@ -450,7 +443,6 @@
                     }
                 }
             } else if (scrollData.action === 'add_column' && scrollData.tableId) {
-                // Scroll ke form tambah kolom
                 const tableContent = document.getElementById('table-content-' + scrollData.tableId);
                 if (tableContent) {
                     const columnForm = tableContent.querySelector('form[action*="kimia-columns.store"]');
@@ -459,7 +451,6 @@
                     }
                 }
             } else if (scrollData.action === 'add_table') {
-                // Scroll ke form tambah tabel
                 const addTableForm = document.querySelector('form[action*="kimia.tables.add"]');
                 if (addTableForm) {
                     const rect = addTableForm.getBoundingClientRect();
@@ -468,17 +459,13 @@
                 }
             }
             
-            // Clear saved position after use
             localStorage.removeItem('kimia_scroll_position');
         }, 1000);
     }
 
-    // Kimia Column Edit Functionality
     document.addEventListener('DOMContentLoaded', function() {
-        // Restore scroll position on page load
         restoreScrollPosition();
 
-        // Intercept Add Column (AJAX, keep page position)
         document.querySelectorAll('form[action*="/kimia-columns"]').forEach(function(form){
             form.addEventListener('submit', function(e){
                 e.preventDefault();
@@ -504,7 +491,6 @@
                     const tableContent = formEl.closest('[id^="table-content-"]');
                     const tbody = tableContent?.querySelector('.dynamic-table tbody');
                     if (tbody) {
-                        // Create rows for multiple columns
                         const columns = json.columns || [json];
                         columns.forEach((column, index) => {
                             const newRow = document.createElement('tr');
@@ -525,7 +511,6 @@
                             tbody.appendChild(newRow);
                         });
                     }
-                    // add input to entry form for multiple columns
                     const entryForm = tableContent?.querySelector('form[action*="/kimia-entries"]');
                     if (entryForm) {
                         const columns = json.columns || [json];
@@ -541,7 +526,6 @@
                     }
                     showNotif(`${json.jumlah_created || 1} kolom berhasil ditambah`, 'success');
                     formEl.reset();
-                    // Keep view on add-column form and focus first input
                     const rectCol = formEl.getBoundingClientRect();
                     const topCol = window.pageYOffset + rectCol.top - 100;
                     window.scrollTo({ top: topCol, behavior: 'smooth' });
@@ -552,7 +536,6 @@
             });
         });
 
-        // Intercept Add Entry (AJAX, keep page position)
         document.querySelectorAll('form[action*="/kimia-entries"]').forEach(function(form){
             form.addEventListener('submit', function(e){
                 e.preventDefault();
@@ -575,8 +558,7 @@
                     const listCard = tableContent?.querySelectorAll('.dynamic-card.mb-6')[1] || tableContent?.querySelector('.dynamic-card.mb-6');
                     const entriesTable = listCard ? listCard.querySelector('table.dynamic-table') : null;
                     const tbody = entriesTable ? entriesTable.querySelector('tbody') : null;
-                    if (!tbody) { 
-                        // Jika tidak ada tbody, buat tabel baru
+                    if (!tbody) {
                         if (listCard && !listCard.querySelector('table')) {
                             const table = document.createElement('table');
                             table.className = 'table dynamic-table mb-0';
@@ -616,7 +598,7 @@
                     tbody.appendChild(tr);
                     showNotif('Entry berhasil ditambah', 'success');
                     formEl.reset();
-                    // Keep view on add-entry form and focus first input
+
                     const rectEntry = formEl.getBoundingClientRect();
                     const topEntry = window.pageYOffset + rectEntry.top - 100;
                     window.scrollTo({ top: topEntry, behavior: 'smooth' });
@@ -626,7 +608,7 @@
                 .catch(() => { formEl.removeEventListener('submit', arguments.callee); formEl.submit(); });
             });
         });
-        // Edit Kimia Columns
+
         document.addEventListener('click', function(e) {
             const editBtn = e.target.closest('.kimia-edit-col');
             if (editBtn) {
@@ -646,7 +628,6 @@
                     `<button type='button' class='action-btn action-btn-cancel kimia-cancel-col' data-id='${id}'><i class="bi bi-x-lg me-1"></i>Batal</button></div></td>`;
             }
 
-            // Save Kimia Column
             const saveBtn = e.target.closest('.kimia-save-col');
             if (saveBtn) {
                 const id = saveBtn.dataset.id;
@@ -675,36 +656,32 @@
                 .catch(err => showNotif(err.message, 'danger'));
             }
 
-            // Cancel Kimia Column
             const cancelBtn = e.target.closest('.kimia-cancel-col');
             if (cancelBtn) {
                 location.reload();
             }
 
-            // Edit Kimia Entry
             const editEntryBtn = e.target.closest('.kimia-entry-edit-btn');
             if (editEntryBtn) {
                 const id = editEntryBtn.dataset.id;
                 const row = document.getElementById('kimia-entry-row-' + id);
                 if (!row) return;
-                
-                // Simpan data lama
+
                 const oldData = [];
                 row.querySelectorAll('.kimia-entry-col').forEach(td => oldData.push(td.innerText));
-                
-                // Ganti ke input untuk semua kolom di row ini
+
+
                 row.querySelectorAll('.kimia-entry-col').forEach(td => {
                     const colId = td.dataset.colId;
                     const currentValue = td.innerText.trim();
                     const inputType = getInputTypeForColumn(colId);
                     td.innerHTML = `<input type='${inputType.type}' class='dynamic-input kimia-entry-edit-input' value='${currentValue}' data-col-id='${colId}' ${inputType.step ? 'step="0.01"' : ''}>`;
                 });
-                
-                // Ganti tombol aksi
+
                 row.querySelector('td:last-child').innerHTML = `<div class="d-flex gap-1"><button type='button' class='kimia-entry-save-btn action-btn action-btn-save' data-id='${id}'><i class="bi bi-check-lg me-1"></i>Simpan</button><button type='button' class='kimia-entry-cancel-btn action-btn action-btn-cancel' data-id='${id}'><i class="bi bi-x-lg me-1"></i>Batal</button></div>`;
             }
 
-            // Save Kimia Entry
+
             const saveEntryBtn = e.target.closest('.kimia-entry-save-btn');
             if (saveEntryBtn) {
                 const id = saveEntryBtn.dataset.id;
@@ -729,12 +706,12 @@
                 })
                 .then(json => {
                     if (json.success || json.updated) {
-                        // Update tampilan baris dengan format yang benar
+
                         row.querySelectorAll('.kimia-entry-col').forEach(td => {
                             const colId = td.dataset.colId;
                             const colType = td.dataset.colType;
                             const value = data[colId];
-                            
+
                             if (value) {
                                 if (colType === 'date') {
                                     const date = new Date(value);
@@ -748,11 +725,10 @@
                                 td.innerHTML = '<span class="text-gray-400">-</span>';
                             }
                         });
-                        
+
                         row.querySelector('td:last-child').innerHTML = `<div class="d-flex gap-1"><button type='button' class='kimia-entry-edit-btn action-btn action-btn-edit' data-id='${id}'><i class="bi bi-pencil-square me-1"></i>Edit</button><form action="/kimia-entries/${id}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')"><input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}"><input type="hidden" name="_method" value="DELETE"><button type="submit" class="action-btn action-btn-delete"><i class="bi bi-trash me-1"></i>Hapus</button></form></div>`;
                         showNotif('Entry berhasil diupdate', 'success');
-                        
-                        // Save scroll position for edit entry
+
                         const tableId = row.closest('[id^="table-content-"]')?.id?.replace('table-content-', '');
                         if (tableId) {
                             saveScrollPosition('edit_entry', tableId, id);
@@ -767,24 +743,20 @@
                 });
             }
 
-            // Cancel Kimia Entry
             const cancelEntryBtn = e.target.closest('.kimia-entry-cancel-btn');
             if (cancelEntryBtn) {
                 location.reload();
             }
 
-            // Edit Kimia Table
             const editTableBtn = e.target.closest('.kimia-edit-table');
             if (editTableBtn) {
                 const id = editTableBtn.dataset.id;
                 const currentName = editTableBtn.dataset.name;
                 const tableItem = document.getElementById('table-item-' + id);
                 const nameSpan = tableItem.querySelector('span.fw-bold');
-                
-                // Ganti dengan input
+
                 nameSpan.innerHTML = `<input type="text" class="form-control form-control-sm d-inline-block" value="${currentName}" id="edit-table-name-${id}" style="width: 200px;">`;
-                
-                // Ganti tombol
+
                 const buttonGroup = tableItem.querySelector('.d-flex.gap-1');
                 buttonGroup.innerHTML = `
                     <button type="button" class="btn btn-sm btn-success kimia-save-table" data-id="${id}">
@@ -796,17 +768,16 @@
                 `;
             }
 
-            // Save Kimia Table
             const saveTableBtn = e.target.closest('.kimia-save-table');
             if (saveTableBtn) {
                 const id = saveTableBtn.dataset.id;
                 const newName = document.getElementById('edit-table-name-' + id).value;
-                
+
                 if (!newName.trim()) {
                     showNotif('Nama tabel tidak boleh kosong', 'danger');
                     return;
                 }
-                
+
                 fetch(`/kimia-tables/${id}`, {
                     method: 'PUT',
                     headers: {
@@ -823,7 +794,7 @@
                         const tableItem = document.getElementById('table-item-' + id);
                         const nameSpan = tableItem.querySelector('span.fw-bold');
                         nameSpan.innerHTML = json.name;
-                        
+
                         const buttonGroup = tableItem.querySelector('.d-flex.gap-1');
                         buttonGroup.innerHTML = `
                             <button type="button" class="btn btn-sm btn-outline-primary kimia-edit-table" data-id="${id}" data-name="${json.name}">
@@ -845,7 +816,6 @@
                 .catch(err => showNotif(err.message, 'danger'));
             }
 
-            // Cancel Kimia Table
             const cancelTableBtn = e.target.closest('.kimia-cancel-table');
             if (cancelTableBtn) {
                 location.reload();

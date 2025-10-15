@@ -23,7 +23,7 @@
             @endif
         </div>
     </div>
-    <!-- Filter Approval + Export All -->
+
     <div class="mb-4 animate-fade-in-up">
         <div class="bg-white rounded-lg shadow-sm p-4 border">
             <div class="row align-items-center">
@@ -65,7 +65,7 @@
             </div>
         </div>
     </div>
-    <!-- Filter Search -->
+
     <div class="mb-4 animate-fade-in-up">
         <div class="bg-white rounded-lg shadow-sm p-4 border">
             <form method="GET" action="" class="row g-3 align-items-end">
@@ -199,11 +199,11 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Intercept klik Export Excel
+
   document.querySelectorAll('a[href*="/export"]').forEach(function(link) {
     link.addEventListener('click', function(e) {
       e.preventDefault();
-      e.stopPropagation(); // Supaya tidak trigger onclick tr
+      e.stopPropagation();
       const tr = link.closest('tr');
       const formId = link.href.match(/mikrobiologi-forms\/(\d+)\/export/)[1];
       const entryCount = tr.getAttribute('data-entry-count');
@@ -217,7 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
         errorMsg = `Tidak bisa export: Data entry kosong!<br><b>Judul:</b> ${judul} <b>No Form:</b> ${noForm}`;
       }
       if (errorMsg) {
-        // Tampilkan alert di web
         let alertDiv = document.getElementById('export-alert');
         if (!alertDiv) {
           alertDiv = document.createElement('div');
@@ -267,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     @endif
     
-    // Alert untuk form yang dihapus
+
     @if(session('info'))
         const alertDiv = document.createElement('div');
         alertDiv.className = 'alert alert-info alert-dismissible fade show';
@@ -280,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         document.querySelector('.max-w-7xl').insertBefore(alertDiv, document.querySelector('.max-w-7xl').firstChild);
         
-        // Auto hide setelah 5 detik
+
         setTimeout(function() {
             if(alertDiv) {
                 alertDiv.style.opacity = '0';

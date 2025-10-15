@@ -19,10 +19,10 @@
                     <i class="bi bi-key me-2 text-primary"></i>Password Lama
                 </label>
                 <input id="update_password_current_password" name="current_password" type="password" 
-                       class="form-control form-control-lg @error('current_password', 'updatePassword') is-invalid @enderror" 
-                       autocomplete="current-password"
-                       style="border-radius: 1rem; border: 2px solid #e2e8f0; padding: 0.75rem 1rem;"
-                       placeholder="Masukkan password lama Anda">
+                        class="form-control form-control-lg @error('current_password', 'updatePassword') is-invalid @enderror" 
+                        autocomplete="current-password"
+                        style="border-radius: 1rem; border: 2px solid #e2e8f0; padding: 0.75rem 1rem;"
+                        placeholder="Masukkan password lama Anda">
                 @error('current_password', 'updatePassword')
                     <div class="invalid-feedback d-block mt-2">
                         <i class="bi bi-exclamation-circle me-1"></i>{{ $message }}
@@ -35,10 +35,10 @@
                     <i class="bi bi-lock me-2 text-primary"></i>Password Baru
                 </label>
                 <input id="update_password_password" name="password" type="password" 
-                       class="form-control form-control-lg @error('password', 'updatePassword') is-invalid @enderror" 
-                       autocomplete="new-password"
-                       style="border-radius: 1rem; border: 2px solid #e2e8f0; padding: 0.75rem 1rem;"
-                       placeholder="Masukkan password baru">
+                        class="form-control form-control-lg @error('password', 'updatePassword') is-invalid @enderror" 
+                        autocomplete="new-password"
+                        style="border-radius: 1rem; border: 2px solid #e2e8f0; padding: 0.75rem 1rem;"
+                        placeholder="Masukkan password baru">
                 @error('password', 'updatePassword')
                     <div class="invalid-feedback d-block mt-2">
                         <i class="bi bi-exclamation-circle me-1"></i>{{ $message }}
@@ -51,10 +51,10 @@
                     <i class="bi bi-check-circle me-2 text-primary"></i>Konfirmasi Password Baru
                 </label>
                 <input id="update_password_password_confirmation" name="password_confirmation" type="password" 
-                       class="form-control form-control-lg @error('password_confirmation', 'updatePassword') is-invalid @enderror" 
-                       autocomplete="new-password"
-                       style="border-radius: 1rem; border: 2px solid #e2e8f0; padding: 0.75rem 1rem;"
-                       placeholder="Konfirmasi password baru">
+                        class="form-control form-control-lg @error('password_confirmation', 'updatePassword') is-invalid @enderror" 
+                        autocomplete="new-password"
+                        style="border-radius: 1rem; border: 2px solid #e2e8f0; padding: 0.75rem 1rem;"
+                        placeholder="Konfirmasi password baru">
                 @error('password_confirmation', 'updatePassword')
                     <div class="invalid-feedback d-block mt-2">
                         <i class="bi bi-exclamation-circle me-1"></i>{{ $message }}

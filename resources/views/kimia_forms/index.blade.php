@@ -24,7 +24,6 @@
         </div>
     </div>
 
-    <!-- Filter Approval + Export All -->
     <div class="mb-4 animate-fade-in-up">
         <div class="bg-white rounded-lg shadow-sm p-4 border">
             <div class="row align-items-center">
@@ -67,7 +66,6 @@
         </div>
     </div>
 
-    <!-- Filter Search -->
     <div class="mb-4 animate-fade-in-up">
         <div class="bg-white rounded-lg shadow-sm p-4 border">
             <form method="GET" action="" class="row g-3 align-items-end">
@@ -193,12 +191,12 @@
 <style>
 @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 .animate-fade-in-up { animation: fade-in-up 0.6s ease-out both; }
-@keyframes highlight { 
-    0% { background-color: #fef3c7; } 
-    100% { background-color: transparent; } 
+@keyframes highlight {
+    0% { background-color: #fef3c7; }
+    100% { background-color: transparent; }
 }
-.highlight-restored { 
-    animation: highlight 5.5s ease-out; 
+.highlight-restored {
+    animation: highlight 5.5s ease-out;
 }
 </style>
 
@@ -212,8 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     @endif
-    
-    // Alert untuk form yang dihapus
+
     @if(session('info'))
         const alertDiv = document.createElement('div');
         alertDiv.className = 'alert alert-info alert-dismissible fade show';
@@ -225,8 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
         document.querySelector('.max-w-7xl').insertBefore(alertDiv, document.querySelector('.max-w-7xl').firstChild);
-        
-        // Auto hide setelah 5 detik
+
         setTimeout(function() {
             if(alertDiv) {
                 alertDiv.style.opacity = '0';

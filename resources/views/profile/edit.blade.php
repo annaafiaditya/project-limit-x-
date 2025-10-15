@@ -3,12 +3,11 @@
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
-        <!-- Hero Section -->
+
         <div class="col-12 col-lg-10 mb-4 fade-slide-up">
             <div class="d-flex flex-column flex-md-row align-items-center justify-content-between p-4 p-md-5 shadow-lg hero-profile-card" 
                 style="border-radius: 2rem; background: linear-gradient(120deg, #e0f7fa 0%, #f8fafc 100%); border: 1.5px solid #e0e7ef; box-shadow: 0 8px 32px #0001;">
-                
-                <!-- Teks Sambutan -->
+
                 <div class="mb-4 mb-md-0 text-center text-md-start flex-grow-1">
                     <h1 class="fw-bold text-success mb-3" style="font-size: 2.6rem; letter-spacing: 0.5px; text-shadow: 0 2px 6px #b6f0e6;">
                         <i class="bi bi-person-circle me-3"></i>Profile Settings
@@ -24,7 +23,6 @@
             </div>
         </div>
 
-        <!-- Profile Forms -->
         <div class="col-12 col-lg-10 mb-4 fade-slide-up fade-slide-up-delay-1">
             <div class="row g-4">
                 <div class="col-12 col-lg-6">

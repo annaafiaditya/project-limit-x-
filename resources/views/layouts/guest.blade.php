@@ -8,11 +8,9 @@
         <title>Limit-X Futami</title>
         <link rel="icon" type="image/png" href="{{ asset('assets/img/logo_2x_limit_x.png') }}">
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased" style="background: url('{{ asset('assets/img/bg_login.jpeg') }}') center center / cover no-repeat fixed; min-height: 100vh;">

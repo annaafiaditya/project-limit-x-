@@ -22,7 +22,6 @@ class FormExport implements FromArray, WithStyles, WithTitle, WithColumnWidths, 
     
     public function array(): array
     {
-        // Ambil observations untuk ditampilkan
         $observations = $this->form->observations()->orderBy('tanggal')->get();
         $tglPengamatanText = '';
         
@@ -44,8 +43,6 @@ class FormExport implements FromArray, WithStyles, WithTitle, WithColumnWidths, 
             ['Tanggal Pengamatan', $tglPengamatanText],
             [''],
         ];
-        
-        // Tambahkan judul tabel jika ada
         if ($this->form->judul_tabel) {
             $header[] = [$this->form->judul_tabel];
             $header[] = [''];
@@ -62,8 +59,7 @@ class FormExport implements FromArray, WithStyles, WithTitle, WithColumnWidths, 
             $row = [];
             foreach ($columns as $col) {
                 $value = $entry->data[$col->id] ?? '';
-                
-                // Format data berdasarkan tipe kolom
+
                 if ($col->tipe_kolom === 'date' && $value) {
                     $value = \Carbon\Carbon::parse($value)->format('d/m/Y');
                 } elseif ($col->tipe_kolom === 'time' && $value) {
@@ -94,7 +90,6 @@ class FormExport implements FromArray, WithStyles, WithTitle, WithColumnWidths, 
             ];
         }
         
-        // Tambahkan No Dokumen di kanan bawah setelah approval
         $approvalRows[] = [''];
         $approvalRows[] = ['', '', '', 'No. Dokumen: ' . ($this->form->no_dokumen ?? '-')];
         
@@ -125,41 +120,36 @@ class FormExport implements FromArray, WithStyles, WithTitle, WithColumnWidths, 
         return [
             AfterSheet::class => function(AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
-                
-                // Header styling - Judul utama
+
                 $sheet->mergeCells('A1:E1');
                 $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(18);
                 $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
                 $sheet->getStyle('A1')->getFill()->setFillType('solid')->getStartColor()->setRGB('dbeafe');
-                
-                // Form info styling
+
                 $sheet->getStyle('A2:B4')->getFont()->setBold(true);
                 $sheet->getStyle('A2:B4')->getFill()->setFillType('solid')->getStartColor()->setRGB('f8fafc');
-                
-                // Hitung posisi yang tepat untuk styling
+
                 $columns = $this->form->columns()->orderBy('urutan')->get();
                 $colCount = count($columns);
                 $colLetterEnd = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colCount);
                 $entryCount = $this->form->entries()->count();
-                
-                // Tentukan baris header tabel
+
                 $headerRow = 6;
                 if ($this->form->judul_tabel) {
-                    $headerRow = 8; // Jika ada judul tabel, header ada di baris 8
+                    $headerRow = 8;
                 }
-                
+
                 $dataStart = $headerRow + 1;
                 $dataEnd = $headerRow + $entryCount;
-                
-                // Header table styling
+
                 $sheet->getStyle('A'.$headerRow.':'.$colLetterEnd.$headerRow)->getAlignment()->setHorizontal('center');
                 $sheet->getStyle('A'.$headerRow.':'.$colLetterEnd.$headerRow)->getFont()->setBold(true);
                 $sheet->getStyle('A'.$headerRow.':'.$colLetterEnd.$headerRow)->getFill()->setFillType('solid')->getStartColor()->setRGB('3b82f6');
                 $sheet->getStyle('A'.$headerRow.':'.$colLetterEnd.$headerRow)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFFFF'));
-                
+
                 if ($entryCount > 0) {
                     $sheet->getStyle('A'.$headerRow.':'.$colLetterEnd.$dataEnd)->getBorders()->getAllBorders()->setBorderStyle('thin');
-                    // Alternating row colors
+
                     for ($i = $dataStart; $i <= $dataEnd; $i++) {
                         if (($i - $dataStart) % 2 == 0) {
                             $sheet->getStyle('A'.$i.':'.$colLetterEnd.$i)->getFill()->setFillType('solid')->getStartColor()->setRGB('f0f9ff');
@@ -168,8 +158,7 @@ class FormExport implements FromArray, WithStyles, WithTitle, WithColumnWidths, 
                 } else {
                     $sheet->getStyle('A'.$headerRow.':'.$colLetterEnd.$headerRow)->getBorders()->getAllBorders()->setBorderStyle('thin');
                 }
-                
-                // Set row heights
+
                 $sheet->getRowDimension(1)->setRowHeight(30);
                 $sheet->getRowDimension(5)->setRowHeight(15);
             }

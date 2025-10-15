@@ -52,13 +52,11 @@ class User extends Authenticatable
         return $this->hasMany(MikrobiologiForm::class, 'created_by');
     }
 
-    // Method untuk cek role
     public function hasRole($role)
     {
         return $this->role === $role;
     }
 
-    // Method untuk cek apakah bisa approve role tertentu
     public function canApprove($targetRole)
     {
         $roleHierarchy = [
@@ -70,19 +68,16 @@ class User extends Authenticatable
         return in_array($targetRole, $roleHierarchy[$this->role] ?? []);
     }
 
-    // Method untuk cek apakah user adalah guest
     public function isGuest()
     {
         return $this->role === 'guest';
     }
 
-    // Method untuk cek apakah user bisa melakukan aksi (create, edit, delete)
     public function canPerformActions()
     {
         return !$this->isGuest();
     }
 
-    // Method untuk mendapatkan jabatan berdasarkan role
     public function getJabatanAttribute()
     {
         $jabatan = [

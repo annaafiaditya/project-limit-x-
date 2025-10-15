@@ -39,30 +39,29 @@ class KimiaController extends Controller
         if ($group_title) {
             $query->where('title', $group_title);
         }
-        
-        // Filter approval
+
         if ($request->input('approval') === 'pending') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('status', 'accept'); 
+            $query->whereHas('signatures', function($q){
+                $q->where('status', 'accept');
             }, '<', 3);
         } elseif ($request->input('approval') === 'completed') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('status', 'accept'); 
+            $query->whereHas('signatures', function($q){
+                $q->where('status', 'accept');
             }, '=', 3);
         } elseif ($request->input('approval') === 'technician') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('role', 'technician')->where('status', 'accept'); 
+            $query->whereHas('signatures', function($q){
+                $q->where('role', 'technician')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'staff') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('role', 'staff')->where('status', 'accept'); 
+            $query->whereHas('signatures', function($q){
+                $q->where('role', 'staff')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'supervisor') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('role', 'supervisor')->where('status', 'accept'); 
+            $query->whereHas('signatures', function($q){
+                $q->where('role', 'supervisor')->where('status', 'accept');
             });
         }
-        
+
         $forms = $query->with(['entries', 'signatures'])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)
@@ -91,20 +90,18 @@ class KimiaController extends Controller
             if ($template) {
                 $tables = $template->tables()->with(['columns' => function($q){ $q->orderBy('urutan'); }])->get();
                 \Log::info('DEBUG KIMIA CREATE: tables loaded', ['tables_count' => $tables->count()]);
-                
-                // Generate suggested no form based on template title
+
                 $lastFormWithSameTitle = KimiaForm::where('title', $template->title)
                     ->orderBy('created_at', 'desc')
                     ->first();
                 
-                // Generate format: 01/LAMK/V/25
-                $currentMonth = date('n'); // 1-12
-                $currentYear = date('y'); // 2 digit tahun
+                // 01/LAMK/V/25
+                $currentMonth = date('n');
+                $currentYear = date('y');
                 $romanMonths = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
                 $romanMonth = $romanMonths[$currentMonth];
                 
                 if ($lastFormWithSameTitle) {
-                    // Extract number from existing no form
                     $lastNo = $lastFormWithSameTitle->no;
                     if (preg_match('/^(\d+)\//', $lastNo, $matches)) {
                         $nextNumber = str_pad(intval($matches[1]) + 1, 2, '0', STR_PAD_LEFT);
@@ -114,19 +111,18 @@ class KimiaController extends Controller
                 } else {
                     $nextNumber = '01';
                 }
-                
-                // Extract jenis from template no form or use default
+
                 $jenis = 'LAMK'; // default
                 if ($lastFormWithSameTitle && preg_match('/\d+\/([A-Z]+)\//', $lastFormWithSameTitle->no, $matches)) {
                     $jenis = $matches[1];
                 } elseif ($template && preg_match('/\d+\/([A-Z]+)\//', $template->no, $matches)) {
                     $jenis = $matches[1];
                 }
-                
+
                 $suggested_no = $nextNumber . '/' . $jenis . '/' . $romanMonth . '/' . $currentYear;
             }
         }
-        
+
         return view('kimia_forms.create', compact('template', 'tables', 'suggested_no'));
     }
 
@@ -140,8 +136,7 @@ class KimiaController extends Controller
         
         $validated['created_by'] = Auth::id();
         $form = null;
-        
-        // Duplikat semua tabel jika dari template
+
         if ($request->has('template_title')) {
             \Log::info('DEBUG KIMIA STORE: template_title received', [$request->template_title]);
             $template = KimiaForm::where('title', $request->template_title)
@@ -163,20 +158,19 @@ class KimiaController extends Controller
                     })->toArray()
                 ]);
                 DB::transaction(function () use ($validated, $template, &$form) {
-                    // Generate no form otomatis dengan format: 01/LAMK/V/25
+                    // 01/LAMK/V/25
                     $title = $validated['title'];
                     $lastFormWithSameTitle = KimiaForm::where('title', $title)
                         ->orderBy('created_at', 'desc')
                         ->first();
-                    
-                    // Generate format: 01/LAMK/V/25
+
+                    //  01/LAMK/V/25
                     $currentMonth = date('n'); // 1-12
                     $currentYear = date('y'); // 2 digit tahun
                     $romanMonths = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
                     $romanMonth = $romanMonths[$currentMonth];
-                    
+
                     if ($lastFormWithSameTitle) {
-                        // Extract number from existing no form
                         $lastNo = $lastFormWithSameTitle->no;
                         if (preg_match('/^(\d+)\//', $lastNo, $matches)) {
                             $nextNumber = str_pad(intval($matches[1]) + 1, 2, '0', STR_PAD_LEFT);
@@ -186,8 +180,7 @@ class KimiaController extends Controller
                     } else {
                         $nextNumber = '01';
                     }
-                    
-                    // Extract jenis from existing form or template
+
                     $jenis = 'LAMK'; // default
                     if ($lastFormWithSameTitle && preg_match('/\d+\/([A-Z]+)\//', $lastFormWithSameTitle->no, $matches)) {
                         $jenis = $matches[1];
@@ -198,7 +191,6 @@ class KimiaController extends Controller
                     $validated['no'] = $nextNumber . '/' . $jenis . '/' . $romanMonth . '/' . $currentYear;
                     
                     $form = KimiaForm::create($validated);
-                    // Ambil no_dokumen dari form kimia terakhir yang diupdate (bukan dari template)
                     $latestForm = KimiaForm::whereNotNull('no_dokumen')
                         ->where('no_dokumen', '!=', '')
                         ->orderBy('updated_at', 'desc')
@@ -210,7 +202,6 @@ class KimiaController extends Controller
                     } else {
                         \Log::info('DEBUG KIMIA STORE: tidak ada form dengan no_dokumen');
                     }
-                    // Jika template tidak punya tabel, buat satu tabel default agar tidak kosong
                     if ($template->tables->isEmpty()) {
                         $defaultTable = KimiaTable::create([
                             'form_id' => $form->id,
@@ -225,7 +216,6 @@ class KimiaController extends Controller
                                 'name' => $templateTable->name,
                             ]);
                             \Log::info('DEBUG KIMIA STORE: table created', ['new_table_id' => $newTable->id, 'new_table_name' => $newTable->name]);
-                            // Duplikat kolom
                             foreach ($templateTable->columns as $col) {
                                 $newColumn = KimiaColumn::create([
                                     'form_id' => $form->id,
@@ -236,21 +226,18 @@ class KimiaController extends Controller
                                 ]);
                                 \Log::info('DEBUG KIMIA STORE: column created', ['new_column_id' => $newColumn->id, 'new_column_name' => $newColumn->nama_kolom]);
                             }
-                            // Tidak menduplikat entries sesuai kebutuhan terbaru
                         }
                     }
                 });
                 \Log::info('DEBUG KIMIA STORE: duplication completed', ['form_id' => $form->id, 'tables_duplicated' => $form->tables()->count()]);
             }
         } else {
-            // Buat tabel default pertama jika bukan dari template
             $form = KimiaForm::create($validated);
             $table = KimiaTable::create([
                 'form_id' => $form->id,
                 'name' => 'Tabel 1',
             ]);
             
-            // Duplikat kolom jika dari template (cara lama)
             if ($request->has('columns.nama_kolom')) {
                 $nama_kolom = $request->input('columns.nama_kolom');
                 $tipe_kolom = $request->input('columns.tipe_kolom');
@@ -331,7 +318,6 @@ class KimiaController extends Controller
         $jumlah_kolom = $validated['jumlah_kolom'] ?? 1;
         $created_columns = [];
         
-        // Get the next urutan value
         $lastColumn = KimiaColumn::where('table_id', $validated['table_id'])
             ->orderBy('urutan', 'desc')
             ->first();
@@ -448,7 +434,6 @@ class KimiaController extends Controller
 
         $user = Auth::user();
         
-        // Cek apakah user bisa approve role ini
         if (!$user->canApprove($validated['role'])) {
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk approve role ini!');
         }
@@ -533,7 +518,6 @@ class KimiaController extends Controller
             return back()->with('export_error', 'Tidak ada data sesuai filter untuk diexport.');
         }
 
-        // Generate filename based on applied filters
         $filenameParts = ['Kimia'];
         
         if ($request->filled('search')) {
@@ -581,10 +565,8 @@ class KimiaController extends Controller
         $no = preg_replace('/[^A-Za-z0-9_\-]/', '_', $kimia_form->no);
         $filename = $judul.'_'.$no.'.pdf';
         
-        // Generate HTML content for PDF
         $html = view('kimia_forms.pdf', compact('kimia_form', 'tables', 'signatures'))->render();
         
-        // Return HTML for browser to handle PDF generation
         return response($html)
             ->header('Content-Type', 'text/html')
             ->header('Content-Disposition', 'inline; filename="' . $filename . '"');

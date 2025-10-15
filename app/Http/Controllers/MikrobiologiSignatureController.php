@@ -41,7 +41,6 @@ class MikrobiologiSignatureController extends Controller
 
         $user = Auth::user();
         
-        // Cek apakah user bisa approve role ini
         if (!$user->canApprove($validated['role'])) {
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk approve role ini!');
         }
@@ -84,7 +83,6 @@ class MikrobiologiSignatureController extends Controller
 
         $user = Auth::user();
         
-        // Cek apakah user bisa approve role ini
         if (!$user->canApprove($mikrobiologiSignature->role)) {
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk approve role ini!');
         }
@@ -99,8 +97,7 @@ class MikrobiologiSignatureController extends Controller
     public function destroy(MikrobiologiSignature $mikrobiologiSignature)
     {
         $user = Auth::user();
-        
-        // Cek apakah user bisa approve role ini
+
         if (!$user->canApprove($mikrobiologiSignature->role)) {
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menghapus signature ini!');
         }

@@ -124,25 +124,22 @@
 @section('scripts')
 <script>
 $(document).ready(function() {
-    // Handle form submission with CSRF protection
     $('#loginForm').on('submit', function(e) {
         e.preventDefault();
         
-        // Get fresh CSRF token
         $.get('/refresh-csrf').done(function(data) {
             $('input[name="_token"]').val(data.csrf_token);
             $('meta[name="csrf-token"]').attr('content', data.csrf_token);
-            
-            // Submit the form
+
             this.submit();
         }.bind(this)).fail(function() {
-            // If CSRF refresh fails, show error and reload
+
             alert('Session expired. Please refresh the page and try again.');
             window.location.reload();
         });
     });
     
-    // Handle 419 errors on page load
+
     if (window.location.search.includes('error=419')) {
         alert('Session expired. Please try logging in again.');
         window.history.replaceState({}, document.title, window.location.pathname);
