@@ -113,16 +113,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/mikrobiologi-forms/{mikrobiologi_form}/export', [App\Http\Controllers\MikrobiologiFormController::class, 'export'])->whereNumber('mikrobiologi_form')->name('mikrobiologi-forms.export');
     Route::get('/mikrobiologi-forms/{mikrobiologi_form}/export-pdf', [App\Http\Controllers\MikrobiologiFormController::class, 'exportPdf'])->whereNumber('mikrobiologi_form')->name('mikrobiologi-forms.export-pdf');
 
-    // catatan error disini di bagian microbiologii
     Route::get('/mikrobiologi-forms/create', [App\Http\Controllers\MikrobiologiFormController::class, 'create'])->name('mikrobiologi-forms.create')->middleware('guest.access');
     Route::post('/mikrobiologi-forms', [App\Http\Controllers\MikrobiologiFormController::class, 'store'])->name('mikrobiologi-forms.store')->middleware('guest.access');
+    Route::get('/mikrobiologi-forms/{mikrobiologi_form}', [App\Http\Controllers\MikrobiologiFormController::class, 'show'])->whereNumber('mikrobiologi_form')->name('mikrobiologi-forms.show')->middleware('guest.access'); // <-- Tambahkan rute show yang hilang
     Route::get('/mikrobiologi-forms/{mikrobiologi_form}/edit', [App\Http\Controllers\MikrobiologiFormController::class, 'edit'])->name('mikrobiologi-forms.edit')->middleware('guest.access');
     Route::put('/mikrobiologi-forms/{mikrobiologi_form}', [App\Http\Controllers\MikrobiologiFormController::class, 'update'])->name('mikrobiologi-forms.update')->middleware('guest.access');
     Route::delete('/mikrobiologi-forms/{mikrobiologi_form}', [App\Http\Controllers\MikrobiologiFormController::class, 'destroy'])->name('mikrobiologi-forms.destroy')->middleware('guest.access');
 
-    Route::resource('mikrobiologi-forms', MikrobiologiFormController::class)
-        ->except(['create', 'store', 'edit', 'update', 'destroy'])
-        ->middleware('guest.access');
+    // Route::resource('mikrobiologi-forms', MikrobiologiFormController::class)
+    //     ->except(['create', 'store', 'edit', 'update', 'destroy'])
+    //     ->middleware('guest.access'); // Baris ini dihapus
 
     Route::resource('mikrobiologi-forms.signatures', MikrobiologiSignatureController::class)->shallow()->middleware('guest.access');
 
@@ -149,16 +149,16 @@ Route::middleware(['auth'])->group(function () {
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                  ->orWhere('no', 'like', "%$search%")
-                  ->orWhere('tgl_inokulasi', 'like', "%$search%")
-                  ->orWhere('tgl_pengamatan', 'like', "%$search%");
+                    ->orWhere('no', 'like', "%$search%")
+                    ->orWhere('tgl_inokulasi', 'like', "%$search%")
+                    ->orWhere('tgl_pengamatan', 'like', "%$search%");
             });
         }
 
         if ($search_tgl) {
             $query->where(function($q) use ($search_tgl) {
                 $q->whereDate('tgl_inokulasi', $search_tgl)
-                  ->orWhereDate('tgl_pengamatan', $search_tgl);
+                    ->orWhereDate('tgl_pengamatan', $search_tgl);
             });
         }
 
@@ -240,7 +240,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/kimia/{kimia_form}', [App\Http\Controllers\KimiaController::class, 'show'])->whereNumber('kimia_form')->name('kimia.show');
     Route::get('/kimia/{kimia_form}/edit', [App\Http\Controllers\KimiaController::class, 'edit'])->whereNumber('kimia_form')->name('kimia.edit')->middleware('guest.access');
     Route::put('/kimia/{kimia_form}', [App\Http\Controllers\KimiaController::class, 'update'])->whereNumber('kimia_form')->name('kimia.update')->middleware('guest.access');
-    Route::delete('/kimia/{kimia_form}', [App\Http\Controllers\KimiaController::class, 'destroy'])->whereNumber('kimia_form')->name('kimia.destroy')->middleware('guest.access');
+    Route::delete('/kimia/{kimia_form}', [App\Http\Controllers\KimiaController::class, 'destroy'])->whereNumber('kimia_form')->name('kimia.destroy')->middleware('guest.access'); // <-- Ini sudah benar untuk DELETE
+
     Route::post('/kimia/{kimia_form}/tables', [App\Http\Controllers\KimiaController::class, 'addTable'])->whereNumber('kimia_form')->name('kimia.tables.add')->middleware('guest.access');
     Route::put('/kimia-tables/{kimiaTable}', [App\Http\Controllers\KimiaController::class, 'updateTable'])->name('kimia.tables.update')->middleware('guest.access');
     Route::delete('/kimia-tables/{kimiaTable}', [App\Http\Controllers\KimiaController::class, 'destroyTable'])->name('kimia.tables.destroy')->middleware('guest.access');

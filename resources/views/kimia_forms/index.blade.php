@@ -136,7 +136,7 @@
                         @endif
                         <a href="{{ route('kimia.export', $form) }}" class="text-green-600 hover:underline">Export Excel</a>
                         @if(Auth::user()->canPerformActions())
-                            <form action="{{ route('kimia.destroy', $form) }}" method="POST" onsubmit="return confirm('Yakin hapus?')">
+                            <form action="{{ route('kimia.destroy', $form) }}" method="POST" onsubmit="return confirm('Yakin hapus?')" onclick="event.stopPropagation()">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline">Hapus</button>
                             </form>

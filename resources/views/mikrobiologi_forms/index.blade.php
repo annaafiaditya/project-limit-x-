@@ -144,7 +144,7 @@
                         @endif
                         <a href="{{ route('mikrobiologi-forms.export', ['mikrobiologi_form' => $form->id]) }}" class="text-green-600 hover:underline">Export Excel</a>
                         @if(Auth::user()->canPerformActions())
-                            <form action="{{ route('mikrobiologi-forms.destroy', ['mikrobiologi_form' => $form->id]) }}" method="POST" onsubmit="return confirm('Yakin hapus?')">
+                            <form action="{{ route('mikrobiologi-forms.destroy', ['mikrobiologi_form' => $form->id]) }}" method="POST" onsubmit="return confirm('Yakin hapus?')" onclick="event.stopPropagation()">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline">Hapus</button>
                             </form>
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
         document.querySelector('.max-w-7xl').insertBefore(alertDiv, document.querySelector('.max-w-7xl').firstChild);
-        
+
 
         setTimeout(function() {
             if(alertDiv) {
