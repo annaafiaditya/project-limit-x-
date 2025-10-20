@@ -27,14 +27,12 @@ class GeneralNoteSimpleController extends Controller
         ]);
 
         $user = Auth::user();
-        
-        // Get existing note or create new one
+
         $note = GeneralNoteSimple::getLatest();
         if (!$note) {
             $note = new GeneralNoteSimple();
         }
 
-        // Update note content and metadata
         $note->content = $request->input('content', '');
         $note->last_edited_by = $user->id;
         $note->last_edited_role = $user->role;

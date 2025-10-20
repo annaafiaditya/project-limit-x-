@@ -12,7 +12,7 @@ class TrashController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $type = $request->input('type', 'all'); // all, kimia, mikrobiologi
+        $type = $request->input('type', 'all');
         $perPage = $request->input('perPage', 10);
         
         $kimiaForms = collect();

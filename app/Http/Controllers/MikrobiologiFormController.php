@@ -23,23 +23,22 @@ class MikrobiologiFormController extends Controller
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                  ->orWhere('no', 'like', "%$search%")
-                  ->orWhere('tgl_inokulasi', 'like', "%$search%")
-                  ->orWhere('tgl_pengamatan', 'like', "%$search%")
+                    ->orWhere('no', 'like', "%$search%")
+                    ->orWhere('tgl_inokulasi', 'like', "%$search%")
+                    ->orWhere('tgl_pengamatan', 'like', "%$search%")
                 ;
             });
         }
         if ($search_tgl) {
             $query->where(function($q) use ($search_tgl) {
                 $q->whereDate('tgl_inokulasi', $search_tgl)
-                  ->orWhereDate('tgl_pengamatan', $search_tgl);
+                    ->orWhereDate('tgl_pengamatan', $search_tgl);
             });
         }
         if ($group_title) {
             $query->where('title', $group_title);
         }
-        
-        // Filter approval
+
         if ($request->input('approval') === 'pending') {
             $query->whereHas('signatures', function($q){ 
                 $q->where('status', 'accept'); 
@@ -83,19 +82,19 @@ class MikrobiologiFormController extends Controller
             if ($template) {
                 $columns = $template->columns()->orderBy('urutan')->get();
                 
-                // Generate suggested no form based on template title
+
                 $lastFormWithSameTitle = MikrobiologiForm::where('title', $template->title)
                     ->orderBy('created_at', 'desc')
                     ->first();
                 
-                // Generate format: 01/LAMK/V/25
-                $currentMonth = date('n'); // 1-12
-                $currentYear = date('y'); // 2 digit tahun
+
+                $currentMonth = date('n');
+                $currentYear = date('y');
                 $romanMonths = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
                 $romanMonth = $romanMonths[$currentMonth];
                 
                 if ($lastFormWithSameTitle) {
-                    // Extract number from existing no form
+
                     $lastNo = $lastFormWithSameTitle->no;
                     if (preg_match('/^(\d+)\//', $lastNo, $matches)) {
                         $nextNumber = str_pad(intval($matches[1]) + 1, 2, '0', STR_PAD_LEFT);
@@ -105,8 +104,7 @@ class MikrobiologiFormController extends Controller
                 } else {
                     $nextNumber = '01';
                 }
-                
-                // Extract jenis from template no form or use default
+
                 $jenis = 'LAMK'; // default
                 if ($lastFormWithSameTitle && preg_match('/\d+\/([A-Z]+)\//', $lastFormWithSameTitle->no, $matches)) {
                     $jenis = $matches[1];
@@ -127,20 +125,20 @@ class MikrobiologiFormController extends Controller
             'no' => 'required',
             'judul_tabel' => 'nullable|string',
             'tgl_inokulasi' => 'required|date',
-            // keep legacy field for compatibility; will mirror first observation if provided
+
             'tgl_pengamatan' => 'nullable|date',
             'observations' => 'nullable|array',
             'observations.*.tanggal' => 'required_with:observations|date',
             'observations.*.keterangan' => 'nullable|string',
         ]);
-        // Ensure legacy tgl_pengamatan is never null at DB level
+
         $data = [
             'title' => $validated['title'],
             'no' => $validated['no'],
             'judul_tabel' => $validated['judul_tabel'] ?? null,
             'tgl_inokulasi' => $validated['tgl_inokulasi'],
         ];
-        // Prefer explicit value, else first observation date, else fallback to inokulasi
+
         $firstObsDate = null;
         if ($request->filled('observations')) {
             foreach ($request->input('observations') as $obs) {
@@ -150,7 +148,7 @@ class MikrobiologiFormController extends Controller
         $data['tgl_pengamatan'] = $validated['tgl_pengamatan'] ?? $firstObsDate ?? $validated['tgl_inokulasi'];
         $data['created_by'] = Auth::id();
         $form = MikrobiologiForm::create($data);
-        // If observations array provided, create rows and set legacy tgl_pengamatan to first
+
         if ($request->filled('observations')) {
             foreach ($request->input('observations') as $obs) {
                 if (!empty($obs['tanggal'])) {
@@ -167,25 +165,23 @@ class MikrobiologiFormController extends Controller
                 $form->save();
             }
         }
-        // Logic duplikat form jika dari template
+
         if ($request->has('template_title')) {
             \Log::info('DEBUG STORE: template_title', [$request->template_title]);
             $template = \App\Models\MikrobiologiForm::where('title', $request->template_title)->with(['columns', 'entries'])->latest()->first();
             if ($template) {
-                // Generate no form otomatis dengan format: 01/LAMK/V/25
+
                 $title = $validated['title'];
                 $lastFormWithSameTitle = MikrobiologiForm::where('title', $title)
                     ->orderBy('created_at', 'desc')
                     ->first();
                 
-                // Generate format: 01/LAMK/V/25
-                $currentMonth = date('n'); // 1-12
-                $currentYear = date('y'); // 2 digit tahun
+                $currentMonth = date('n');
+                $currentYear = date('y');
                 $romanMonths = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
                 $romanMonth = $romanMonths[$currentMonth];
                 
                 if ($lastFormWithSameTitle) {
-                    // Extract number from existing no form
                     $lastNo = $lastFormWithSameTitle->no;
                     if (preg_match('/^(\d+)\//', $lastNo, $matches)) {
                         $nextNumber = str_pad(intval($matches[1]) + 1, 2, '0', STR_PAD_LEFT);
@@ -196,7 +192,6 @@ class MikrobiologiFormController extends Controller
                     $nextNumber = '01';
                 }
                 
-                // Extract jenis from existing form or template
                 $jenis = 'LAMK'; // default
                 if ($lastFormWithSameTitle && preg_match('/\d+\/([A-Z]+)\//', $lastFormWithSameTitle->no, $matches)) {
                     $jenis = $matches[1];
@@ -209,7 +204,6 @@ class MikrobiologiFormController extends Controller
                 $form->save();
                 \Log::info('DEBUG STORE: no form otomatis generated', ['form_id' => $form->id, 'new_no' => $newNo]);
                 
-                // Ambil no_dokumen dari form mikrobiologi terakhir yang diupdate (bukan dari template)
                 $latestForm = \App\Models\MikrobiologiForm::whereNotNull('no_dokumen')
                     ->where('no_dokumen', '!=', '')
                     ->orderBy('updated_at', 'desc')
@@ -312,7 +306,7 @@ class MikrobiologiFormController extends Controller
         }
         $payload['tgl_pengamatan'] = $validated['tgl_pengamatan'] ?? $firstObsDate ?? $validated['tgl_inokulasi'];
         $mikrobiologi_form->update($payload);
-        // Sync observations
+
         if ($request->has('observations')) {
             $idsKept = [];
             foreach ($request->input('observations') as $obs) {
@@ -335,16 +329,16 @@ class MikrobiologiFormController extends Controller
                 }
             }
             MikrobiologiObservation::where('form_id', $mikrobiologi_form->id)->whereNotIn('id', $idsKept)->delete();
-            // Mirror legacy field to first observation if needed
+
             $first = MikrobiologiObservation::where('form_id', $mikrobiologi_form->id)->orderBy('tanggal')->first();
             $mikrobiologi_form->tgl_pengamatan = $validated['tgl_pengamatan'] ?? ($first->tanggal ?? $validated['tgl_inokulasi']);
             $mikrobiologi_form->save();
         }
-        // Jika request mengandung ?from=show, redirect ke detail form
+
         if ($request->query('from') === 'show') {
             return redirect()->route('mikrobiologi-forms.show', ['mikrobiologi_form' => $mikrobiologi_form->id])->with('success', 'Form berhasil diupdate!');
         }
-        // Default: redirect ke index
+
         return redirect()->route('mikrobiologi-forms.index')->with('success', 'Form berhasil diupdate!');
     }
 
@@ -376,9 +370,9 @@ class MikrobiologiFormController extends Controller
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                  ->orWhere('no', 'like', "%$search%")
-                  ->orWhere('tgl_inokulasi', 'like', "%$search%")
-                  ->orWhere('tgl_pengamatan', 'like', "%$search%");
+                    ->orWhere('no', 'like', "%$search%")
+                    ->orWhere('tgl_inokulasi', 'like', "%$search%")
+                    ->orWhere('tgl_pengamatan', 'like', "%$search%");
             });
         }
 
@@ -386,7 +380,7 @@ class MikrobiologiFormController extends Controller
             $search_tgl = $request->input('search_tgl');
             $query->where(function($q) use ($search_tgl) {
                 $q->whereDate('tgl_inokulasi', $search_tgl)
-                  ->orWhereDate('tgl_pengamatan', $search_tgl);
+                    ->orWhereDate('tgl_pengamatan', $search_tgl);
             });
         }
 
@@ -404,9 +398,9 @@ class MikrobiologiFormController extends Controller
             return back()->with('export_error', 'Tidak ada data sesuai filter untuk diexport.');
         }
 
-        // Generate filename based on applied filters
+
         $filenameParts = ['Mikrobiologi'];
-        
+
         if ($request->filled('search')) {
             $search = preg_replace('/[^A-Za-z0-9_\-]/', '_', $request->input('search'));
             $filenameParts[] = 'Search_' . substr($search, 0, 20);
@@ -445,11 +439,9 @@ class MikrobiologiFormController extends Controller
         $judul = preg_replace('/[^A-Za-z0-9_\-]/', '_', $mikrobiologi_form->title);
         $no = preg_replace('/[^A-Za-z0-9_\-]/', '_', $mikrobiologi_form->no);
         $filename = $judul.'_'.$no.'.pdf';
-        
-        // Generate HTML content for PDF
+
         $html = view('mikrobiologi_forms.pdf', compact('mikrobiologi_form', 'columns', 'entries', 'signatures', 'observations'))->render();
-        
-        // Return HTML for browser to handle PDF generation
+
         return response($html)
             ->header('Content-Type', 'text/html')
             ->header('Content-Disposition', 'inline; filename="' . $filename . '"');

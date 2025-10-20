@@ -25,6 +25,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
     Route::get('/dashboard/data', function () {
         $judulCounts = Cache::remember('dash_mikro_judul_counts', 60, function () {
             return \App\Models\MikrobiologiForm::select('title', DB::raw('COUNT(*) as total'))
@@ -32,9 +33,11 @@ Route::middleware(['auth'])->group(function () {
                 ->orderBy('title')
                 ->pluck('total', 'title');
         });
+
         $entryCount = Cache::remember('dash_mikro_entry_count', 60, function () {
             return \App\Models\MikrobiologiEntry::count();
         });
+
         $approvalPending = Cache::remember('dash_mikro_approval_pending', 60, function () {
             return \App\Models\MikrobiologiForm::whereDoesntHave('signatures', function($q){
                 $q->where('status', 'accept');
@@ -49,9 +52,11 @@ Route::middleware(['auth'])->group(function () {
                 ->orderBy('title')
                 ->pluck('total', 'title');
         });
+
         $kimiaEntryCount = Cache::remember('dash_kimia_entry_count', 60, function () {
             return \App\Models\KimiaEntry::count();
         });
+
         $kimiaApprovalPending = Cache::remember('dash_kimia_approval_pending', 60, function () {
             return \App\Models\KimiaForm::whereDoesntHave('signatures', function($q){
                 $q->where('status', 'accept');
@@ -63,6 +68,7 @@ Route::middleware(['auth'])->group(function () {
         $totalMikrobiologiForms = Cache::remember('dash_total_mikro_forms', 60, function () {
             return \App\Models\MikrobiologiForm::count();
         });
+
         $totalKimiaForms = Cache::remember('dash_total_kimia_forms', 60, function () {
             return \App\Models\KimiaForm::count();
         });
@@ -81,6 +87,7 @@ Route::middleware(['auth'])->group(function () {
             'kimia_total_forms' => $totalKimiaForms,
         ]);
     })->name('dashboard.data');
+
     Route::post('/dashboard/note', function (Illuminate\Http\Request $request) {
         $request->validate([
             'note' => 'nullable|string|max:2000',
@@ -88,62 +95,73 @@ Route::middleware(['auth'])->group(function () {
         $user = Auth::user();
         $user->note = $request->note;
         $user->save();
-        
+
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Catatan pribadi berhasil disimpan'
             ]);
         }
-        
+
         return redirect()->route('dashboard')->with('note_saved', true);
     })->name('dashboard.note');
-    
+
     Route::get('/general-note', [App\Http\Controllers\GeneralNoteSimpleController::class, 'show'])->name('general-note.show');
     Route::post('/general-note', [App\Http\Controllers\GeneralNoteSimpleController::class, 'update'])->name('general-note.update');
-    
+
     Route::get('/mikrobiologi-forms/export-all', [App\Http\Controllers\MikrobiologiFormController::class, 'exportAll'])->name('mikrobiologi-forms.export-all');
     Route::get('/mikrobiologi-forms/{mikrobiologi_form}/export', [App\Http\Controllers\MikrobiologiFormController::class, 'export'])->whereNumber('mikrobiologi_form')->name('mikrobiologi-forms.export');
     Route::get('/mikrobiologi-forms/{mikrobiologi_form}/export-pdf', [App\Http\Controllers\MikrobiologiFormController::class, 'exportPdf'])->whereNumber('mikrobiologi_form')->name('mikrobiologi-forms.export-pdf');
-    Route::resource('mikrobiologi-forms', MikrobiologiFormController::class)->except(['create', 'store', 'edit', 'update', 'destroy'])->middleware('guest.access');
+
+    // catatan error disini di bagian microbiologii
     Route::get('/mikrobiologi-forms/create', [App\Http\Controllers\MikrobiologiFormController::class, 'create'])->name('mikrobiologi-forms.create')->middleware('guest.access');
     Route::post('/mikrobiologi-forms', [App\Http\Controllers\MikrobiologiFormController::class, 'store'])->name('mikrobiologi-forms.store')->middleware('guest.access');
     Route::get('/mikrobiologi-forms/{mikrobiologi_form}/edit', [App\Http\Controllers\MikrobiologiFormController::class, 'edit'])->name('mikrobiologi-forms.edit')->middleware('guest.access');
     Route::put('/mikrobiologi-forms/{mikrobiologi_form}', [App\Http\Controllers\MikrobiologiFormController::class, 'update'])->name('mikrobiologi-forms.update')->middleware('guest.access');
     Route::delete('/mikrobiologi-forms/{mikrobiologi_form}', [App\Http\Controllers\MikrobiologiFormController::class, 'destroy'])->name('mikrobiologi-forms.destroy')->middleware('guest.access');
+
+    Route::resource('mikrobiologi-forms', MikrobiologiFormController::class)
+        ->except(['create', 'store', 'edit', 'update', 'destroy'])
+        ->middleware('guest.access');
+
     Route::resource('mikrobiologi-forms.signatures', MikrobiologiSignatureController::class)->shallow()->middleware('guest.access');
+
     Route::put('/mikrobiologi-forms/{mikrobiologi_form}/no-dokumen', [App\Http\Controllers\MikrobiologiFormController::class, 'updateNoDokumen'])->name('mikrobiologi-forms.no-dokumen.update')->middleware('guest.access');
 
     Route::post('/columns', [MikrobiologiColumnController::class, 'store'])->name('columns.store')->middleware('guest.access');
     Route::put('/columns/{id}', [MikrobiologiColumnController::class, 'update'])->name('columns.update')->middleware('guest.access');
     Route::delete('/columns/{id}', [MikrobiologiColumnController::class, 'destroy'])->name('columns.destroy')->middleware('guest.access');
+
     Route::post('/mikrobiologi-forms/{form}/entries', [MikrobiologiEntryController::class, 'store'])->name('mikrobiologi-forms.entries.store')->middleware('guest.access');
     Route::delete('/entries/{mikrobiologiEntry}', [MikrobiologiEntryController::class, 'destroy'])->name('entries.destroy')->middleware('guest.access');
     Route::put('/entries/{mikrobiologiEntry}', [MikrobiologiEntryController::class, 'update'])->name('entries.update')->middleware('guest.access');
+
     Route::get('/template-forms/unique-titles', [App\Http\Controllers\MikrobiologiFormController::class, 'uniqueTitles'])->name('template-forms.unique-titles');
-    
 
     Route::get('/mikrobiologi-forms', function (Illuminate\Http\Request $request) {
         $search = $request->input('search');
         $search_tgl = $request->input('search_tgl');
         $group_title = $request->input('group_title');
         $perPage = $request->input('perPage', 10);
+
         $query = \App\Models\MikrobiologiForm::query();
+
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
                   ->orWhere('no', 'like', "%$search%")
                   ->orWhere('tgl_inokulasi', 'like', "%$search%")
-                  ->orWhere('tgl_pengamatan', 'like', "%$search%")
-                ;
+                  ->orWhere('tgl_pengamatan', 'like', "%$search%");
             });
         }
+
         if ($search_tgl) {
             $query->where(function($q) use ($search_tgl) {
                 $q->whereDate('tgl_inokulasi', $search_tgl)
                   ->orWhereDate('tgl_pengamatan', $search_tgl);
             });
         }
+
         if ($group_title) {
             $query->where('title', $group_title);
         }
@@ -159,19 +177,20 @@ Route::middleware(['auth'])->group(function () {
         } elseif ($request->input('approval') === 'supervisor') {
             $query->whereHas('signatures', function($q){ $q->where('role', 'supervisor')->where('status', 'accept'); });
         }
+
         $forms = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends($request->except('page'));
+
         $titles = \App\Models\MikrobiologiForm::select('title')->distinct()->orderBy('title')->pluck('title');
         $template_titles = $titles;
+
         return view('mikrobiologi_forms.index', compact('forms', 'search', 'search_tgl', 'group_title', 'titles', 'perPage', 'template_titles'));
     })->name('mikrobiologi-forms.index');
 });
-
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
 
     Route::get('/kimia', function (Illuminate\Http\Request $request) {
         $search = $request->input('search');
@@ -179,6 +198,7 @@ Route::middleware('auth')->group(function () {
         $group_title = $request->input('group_title');
         $perPage = $request->input('perPage', 10);
         $query = \App\Models\KimiaForm::query();
+
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
@@ -186,9 +206,11 @@ Route::middleware('auth')->group(function () {
                     ->orWhere('tanggal', 'like', "%$search%");
             });
         }
+
         if ($search_tgl) {
             $query->whereDate('tanggal', $search_tgl);
         }
+
         if ($group_title) {
             $query->where('title', $group_title);
         }
@@ -204,11 +226,15 @@ Route::middleware('auth')->group(function () {
         } elseif ($request->input('approval') === 'supervisor') {
             $query->whereHas('signatures', function($q){ $q->where('role', 'supervisor')->where('status', 'accept'); });
         }
+
         $forms = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends($request->except('page'));
+
         $titles = \App\Models\KimiaForm::select('title')->distinct()->orderBy('title')->pluck('title');
         $template_titles = $titles;
+
         return view('kimia_forms.index', compact('forms', 'search', 'search_tgl', 'group_title', 'titles', 'perPage', 'template_titles'));
     })->name('kimia.index');
+
     Route::get('/kimia/create', [App\Http\Controllers\KimiaController::class, 'create'])->name('kimia.create')->middleware('guest.access');
     Route::post('/kimia', [App\Http\Controllers\KimiaController::class, 'store'])->name('kimia.store')->middleware('guest.access');
     Route::get('/kimia/{kimia_form}', [App\Http\Controllers\KimiaController::class, 'show'])->whereNumber('kimia_form')->name('kimia.show');
@@ -222,6 +248,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/kimia-columns', [App\Http\Controllers\KimiaController::class, 'storeColumn'])->name('kimia-columns.store')->middleware('guest.access');
     Route::put('/kimia-columns/{kimiaColumn}', [App\Http\Controllers\KimiaController::class, 'updateColumn'])->name('kimia-columns.update')->middleware('guest.access');
     Route::delete('/kimia-columns/{kimiaColumn}', [App\Http\Controllers\KimiaController::class, 'destroyColumn'])->name('kimia-columns.destroy')->middleware('guest.access');
+
     Route::post('/kimia-entries', [App\Http\Controllers\KimiaController::class, 'storeEntry'])->name('kimia-entries.store')->middleware('guest.access');
     Route::put('/kimia-entries/{kimiaEntry}', [App\Http\Controllers\KimiaController::class, 'updateEntry'])->name('kimia-entries.update')->middleware('guest.access');
     Route::delete('/kimia-entries/{kimiaEntry}', [App\Http\Controllers\KimiaController::class, 'destroyEntry'])->name('kimia-entries.destroy')->middleware('guest.access');
@@ -240,6 +267,7 @@ Route::middleware('auth')->group(function () {
         });
         return view('kimia_forms.print', compact('kimia_form', 'tables', 'signatures'));
     })->whereNumber('kimia_form')->name('kimia.print');
+
     Route::put('/kimia/{kimia_form}/no-dokumen', [App\Http\Controllers\KimiaController::class, 'updateNoDokumen'])->whereNumber('kimia_form')->name('kimia.no-dokumen.update');
 
     Route::get('/trash', [App\Http\Controllers\TrashController::class, 'index'])->name('trash.index')->middleware('guest.access');

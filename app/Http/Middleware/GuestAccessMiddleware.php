@@ -31,6 +31,7 @@ class GuestAccessMiddleware
                 'mikrobiologi-forms.export',
                 'mikrobiologi-forms.export-pdf',
                 'mikrobiologi-forms.export-all',
+                // 'mikrobiologi-forms.create', // error di belah sini
 
                 'kimia.index',
                 'kimia.show',
@@ -65,3 +66,4 @@ class GuestAccessMiddleware
         return $next($request);
     }
 }
+
