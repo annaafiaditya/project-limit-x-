@@ -90,7 +90,7 @@
                 <img src="{{ asset('assets/img/logo_limit_x.png') }}" alt="Limit X Logo">
             </div>
             <div class="home-title">Limit-X Futami</div>
-            <div class="home-desc">Sistem pencatatan, monitoring, dan pelaporan data mikrobiologi laboratorium dengan fitur modern, mudah digunakan, dan aman.</div>
+            <div class="home-desc">Sistem pencatatan, monitoring, dan pelaporan data laboratorium dengan fitur modern, mudah digunakan, dan aman.</div>
             <div class="d-flex gap-3 justify-content-center">
                 <a href="{{ route('login') }}" class="btn btn-home">Login</a>
                 <a href="{{ route('register') }}" class="btn btn-home">Register</a>

@@ -39,9 +39,9 @@ Route::middleware(['auth'])->group(function () {
         });
 
         $approvalPending = Cache::remember('dash_mikro_approval_pending', 60, function () {
-            return \App\Models\MikrobiologiForm::whereDoesntHave('signatures', function($q){
+            return \App\Models\MikrobiologiForm::whereDoesntHave('signatures', function ($q) {
                 $q->where('status', 'accept');
-            })->orWhereHas('signatures', function($q){
+            })->orWhereHas('signatures', function ($q) {
                 $q->where('status', 'accept');
             }, '<', 3)->count();
         });
@@ -58,9 +58,9 @@ Route::middleware(['auth'])->group(function () {
         });
 
         $kimiaApprovalPending = Cache::remember('dash_kimia_approval_pending', 60, function () {
-            return \App\Models\KimiaForm::whereDoesntHave('signatures', function($q){
+            return \App\Models\KimiaForm::whereDoesntHave('signatures', function ($q) {
                 $q->where('status', 'accept');
-            })->orWhereHas('signatures', function($q){
+            })->orWhereHas('signatures', function ($q) {
                 $q->where('status', 'accept');
             }, '<', 3)->count();
         });
@@ -147,7 +147,7 @@ Route::middleware(['auth'])->group(function () {
         $query = \App\Models\MikrobiologiForm::query();
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
                     ->orWhere('no', 'like', "%$search%")
                     ->orWhere('tgl_inokulasi', 'like', "%$search%")
@@ -156,7 +156,7 @@ Route::middleware(['auth'])->group(function () {
         }
 
         if ($search_tgl) {
-            $query->where(function($q) use ($search_tgl) {
+            $query->where(function ($q) use ($search_tgl) {
                 $q->whereDate('tgl_inokulasi', $search_tgl)
                     ->orWhereDate('tgl_pengamatan', $search_tgl);
             });
@@ -167,15 +167,25 @@ Route::middleware(['auth'])->group(function () {
         }
 
         if ($request->input('approval') === 'pending') {
-            $query->whereHas('signatures', function($q){ $q->where('status', 'accept'); }, '<', 3);
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
+            }, '<', 3);
         } elseif ($request->input('approval') === 'completed') {
-            $query->whereHas('signatures', function($q){ $q->where('status', 'accept'); }, '=', 3);
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
+            }, '=', 3);
         } elseif ($request->input('approval') === 'technician') {
-            $query->whereHas('signatures', function($q){ $q->where('role', 'technician')->where('status', 'accept'); });
+            $query->whereHas('signatures', function ($q) {
+                $q->where('role', 'technician')->where('status', 'accept');
+            });
         } elseif ($request->input('approval') === 'staff') {
-            $query->whereHas('signatures', function($q){ $q->where('role', 'staff')->where('status', 'accept'); });
+            $query->whereHas('signatures', function ($q) {
+                $q->where('role', 'staff')->where('status', 'accept');
+            });
         } elseif ($request->input('approval') === 'supervisor') {
-            $query->whereHas('signatures', function($q){ $q->where('role', 'supervisor')->where('status', 'accept'); });
+            $query->whereHas('signatures', function ($q) {
+                $q->where('role', 'supervisor')->where('status', 'accept');
+            });
         }
 
         $forms = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends($request->except('page'));
@@ -192,6 +202,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // User Management untuk Supervisor
+    Route::get('/user-management', [App\Http\Controllers\UserManagementController::class, 'index'])->name('user-management.index');
+    Route::delete('/user-management/{user}', [App\Http\Controllers\UserManagementController::class, 'destroy'])->name('user-management.destroy');
+
     Route::get('/kimia', function (Illuminate\Http\Request $request) {
         $search = $request->input('search');
         $search_tgl = $request->input('search_tgl');
@@ -200,7 +214,7 @@ Route::middleware('auth')->group(function () {
         $query = \App\Models\KimiaForm::query();
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
                     ->orWhere('no', 'like', "%$search%")
                     ->orWhere('tanggal', 'like', "%$search%");
@@ -216,15 +230,25 @@ Route::middleware('auth')->group(function () {
         }
 
         if ($request->input('approval') === 'pending') {
-            $query->whereHas('signatures', function($q){ $q->where('status', 'accept'); }, '<', 3);
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
+            }, '<', 3);
         } elseif ($request->input('approval') === 'completed') {
-            $query->whereHas('signatures', function($q){ $q->where('status', 'accept'); }, '=', 3);
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
+            }, '=', 3);
         } elseif ($request->input('approval') === 'technician') {
-            $query->whereHas('signatures', function($q){ $q->where('role', 'technician')->where('status', 'accept'); });
+            $query->whereHas('signatures', function ($q) {
+                $q->where('role', 'technician')->where('status', 'accept');
+            });
         } elseif ($request->input('approval') === 'staff') {
-            $query->whereHas('signatures', function($q){ $q->where('role', 'staff')->where('status', 'accept'); });
+            $query->whereHas('signatures', function ($q) {
+                $q->where('role', 'staff')->where('status', 'accept');
+            });
         } elseif ($request->input('approval') === 'supervisor') {
-            $query->whereHas('signatures', function($q){ $q->where('role', 'supervisor')->where('status', 'accept'); });
+            $query->whereHas('signatures', function ($q) {
+                $q->where('role', 'supervisor')->where('status', 'accept');
+            });
         }
 
         $forms = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends($request->except('page'));
@@ -261,8 +285,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/kimia/{kimia_form}/export-pdf', [App\Http\Controllers\KimiaController::class, 'exportPdf'])->whereNumber('kimia_form')->name('kimia.export-pdf');
 
     Route::get('/kimia/{kimia_form}/print', function (App\Models\KimiaForm $kimia_form) {
-        $tables = $kimia_form->tables()->with(['columns' => function($q){ $q->orderBy('urutan'); }, 'entries'])->get();
-        $signatures = $kimia_form->signatures()->get()->sortBy(function($sig) {
+        $tables = $kimia_form->tables()->with(['columns' => function ($q) {
+            $q->orderBy('urutan');
+        }, 'entries'])->get();
+        $signatures = $kimia_form->signatures()->get()->sortBy(function ($sig) {
             $order = ['technician' => 1, 'staff' => 2, 'supervisor' => 3];
             return $order[$sig->role] ?? 4;
         });
@@ -278,4 +304,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/trash/mikrobiologi/{id}/force-delete', [App\Http\Controllers\TrashController::class, 'forceDeleteMikrobiologi'])->name('trash.force-delete-mikrobiologi')->middleware('guest.access');
 });
 
-require __DIR__.'/auth.php';
+Route::post('/clear-user-notifications', function () {
+    session(['user_notifications_viewed' => true]);
+    return response()->json(['success' => true]);
+})->middleware('auth');
+
+require __DIR__ . '/auth.php';

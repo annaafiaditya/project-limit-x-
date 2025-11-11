@@ -246,12 +246,12 @@ document.addEventListener('DOMContentLoaded', function() {
 .animate-fade-in-up {
   animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
 }
-@keyframes highlight { 
-    0% { background-color: #d1fae5; } 
-    100% { background-color: transparent; } 
+@keyframes highlight {
+    0% { background-color: #d1fae5; }
+    100% { background-color: transparent; }
 }
-.highlight-restored { 
-    animation: highlight 5.5s ease-out; 
+.highlight-restored {
+    animation: highlight 5.5s ease-out;
 }
 </style>
 
@@ -265,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
             formRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     @endif
-    
 
     @if(session('info'))
         const alertDiv = document.createElement('div');
@@ -288,4 +287,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     @endif
 });
-</script> 
+</script>
