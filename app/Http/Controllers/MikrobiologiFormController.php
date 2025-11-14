@@ -21,7 +21,7 @@ class MikrobiologiFormController extends Controller
         $perPage = $request->input('perPage', 10);
         $query = MikrobiologiForm::query();
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
                     ->orWhere('no', 'like', "%$search%")
                     ->orWhere('tgl_inokulasi', 'like', "%$search%")
@@ -30,7 +30,7 @@ class MikrobiologiFormController extends Controller
             });
         }
         if ($search_tgl) {
-            $query->where(function($q) use ($search_tgl) {
+            $query->where(function ($q) use ($search_tgl) {
                 $q->whereDate('tgl_inokulasi', $search_tgl)
                     ->orWhereDate('tgl_pengamatan', $search_tgl);
             });
@@ -40,29 +40,29 @@ class MikrobiologiFormController extends Controller
         }
 
         if ($request->input('approval') === 'pending') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('status', 'accept'); 
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
             }, '<', 3);
         } elseif ($request->input('approval') === 'completed') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('status', 'accept'); 
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
             }, '=', 3);
         } elseif ($request->input('approval') === 'technician') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('role', 'technician')->where('status', 'accept'); 
+            $query->whereDoesntHave('signatures', function ($q) {
+                $q->where('role', 'technician')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'staff') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('role', 'staff')->where('status', 'accept'); 
+            $query->whereDoesntHave('signatures', function ($q) {
+                $q->where('role', 'staff')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'supervisor') {
-            $query->whereHas('signatures', function($q){ 
-                $q->where('role', 'supervisor')->where('status', 'accept'); 
+            $query->whereDoesntHave('signatures', function ($q) {
+                $q->where('role', 'supervisor')->where('status', 'accept');
             });
         }
-        
+
         $forms = $query->with(['entries', 'signatures'])->orderBy('created_at', 'desc')->paginate($perPage)->appends($request->except('page'));
-        $titles = Cache::remember('mikro_distinct_titles', 120, function(){
+        $titles = Cache::remember('mikro_distinct_titles', 120, function () {
             return MikrobiologiForm::select('title')->distinct()->orderBy('title')->pluck('title');
         });
         $template_titles = $titles;
@@ -74,25 +74,25 @@ class MikrobiologiFormController extends Controller
         $template = null;
         $columns = collect();
         $suggested_no = '';
-        
+
         if ($request->has('template_title')) {
             $template = \App\Models\MikrobiologiForm::where('title', $request->template_title)
                 ->with(['columns', 'entries'])
                 ->latest()->first();
             if ($template) {
                 $columns = $template->columns()->orderBy('urutan')->get();
-                
+
 
                 $lastFormWithSameTitle = MikrobiologiForm::where('title', $template->title)
                     ->orderBy('created_at', 'desc')
                     ->first();
-                
+
 
                 $currentMonth = date('n');
                 $currentYear = date('y');
                 $romanMonths = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
                 $romanMonth = $romanMonths[$currentMonth];
-                
+
                 if ($lastFormWithSameTitle) {
 
                     $lastNo = $lastFormWithSameTitle->no;
@@ -111,7 +111,7 @@ class MikrobiologiFormController extends Controller
                 } elseif ($template && preg_match('/\d+\/([A-Z]+)\//', $template->no, $matches)) {
                     $jenis = $matches[1];
                 }
-                
+
                 $suggested_no = $nextNumber . '/' . $jenis . '/' . $romanMonth . '/' . $currentYear;
             }
         }
@@ -142,7 +142,10 @@ class MikrobiologiFormController extends Controller
         $firstObsDate = null;
         if ($request->filled('observations')) {
             foreach ($request->input('observations') as $obs) {
-                if (!empty($obs['tanggal'])) { $firstObsDate = $obs['tanggal']; break; }
+                if (!empty($obs['tanggal'])) {
+                    $firstObsDate = $obs['tanggal'];
+                    break;
+                }
             }
         }
         $data['tgl_pengamatan'] = $validated['tgl_pengamatan'] ?? $firstObsDate ?? $validated['tgl_inokulasi'];
@@ -159,7 +162,9 @@ class MikrobiologiFormController extends Controller
                     ]);
                 }
             }
-            $first = collect($request->input('observations'))->filter(function($o){ return !empty($o['tanggal']); })->first();
+            $first = collect($request->input('observations'))->filter(function ($o) {
+                return !empty($o['tanggal']);
+            })->first();
             if ($first && empty($validated['tgl_pengamatan'])) {
                 $form->tgl_pengamatan = $first['tanggal'];
                 $form->save();
@@ -175,12 +180,12 @@ class MikrobiologiFormController extends Controller
                 $lastFormWithSameTitle = MikrobiologiForm::where('title', $title)
                     ->orderBy('created_at', 'desc')
                     ->first();
-                
+
                 $currentMonth = date('n');
                 $currentYear = date('y');
                 $romanMonths = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
                 $romanMonth = $romanMonths[$currentMonth];
-                
+
                 if ($lastFormWithSameTitle) {
                     $lastNo = $lastFormWithSameTitle->no;
                     if (preg_match('/^(\d+)\//', $lastNo, $matches)) {
@@ -191,24 +196,24 @@ class MikrobiologiFormController extends Controller
                 } else {
                     $nextNumber = '01';
                 }
-                
+
                 $jenis = 'LAMK'; // default
                 if ($lastFormWithSameTitle && preg_match('/\d+\/([A-Z]+)\//', $lastFormWithSameTitle->no, $matches)) {
                     $jenis = $matches[1];
                 } elseif ($template && preg_match('/\d+\/([A-Z]+)\//', $template->no, $matches)) {
                     $jenis = $matches[1];
                 }
-                
+
                 $newNo = $nextNumber . '/' . $jenis . '/' . $romanMonth . '/' . $currentYear;
                 $form->no = $newNo;
                 $form->save();
                 \Log::info('DEBUG STORE: no form otomatis generated', ['form_id' => $form->id, 'new_no' => $newNo]);
-                
+
                 $latestForm = \App\Models\MikrobiologiForm::whereNotNull('no_dokumen')
                     ->where('no_dokumen', '!=', '')
                     ->orderBy('updated_at', 'desc')
                     ->first();
-                
+
                 if ($latestForm && !empty($latestForm->no_dokumen)) {
                     $form->no_dokumen = $latestForm->no_dokumen;
                     $form->save();
@@ -301,7 +306,10 @@ class MikrobiologiFormController extends Controller
         $firstObsDate = null;
         if ($request->has('observations')) {
             foreach ($request->input('observations') as $obs) {
-                if (!empty($obs['tanggal'])) { $firstObsDate = $obs['tanggal']; break; }
+                if (!empty($obs['tanggal'])) {
+                    $firstObsDate = $obs['tanggal'];
+                    break;
+                }
             }
         }
         $payload['tgl_pengamatan'] = $validated['tgl_pengamatan'] ?? $firstObsDate ?? $validated['tgl_inokulasi'];
@@ -358,7 +366,7 @@ class MikrobiologiFormController extends Controller
     {
         $judul = preg_replace('/[^A-Za-z0-9_\-]/', '_', $mikrobiologi_form->title);
         $no = preg_replace('/[^A-Za-z0-9_\-]/', '_', $mikrobiologi_form->no);
-        $filename = $judul.'_'.$no.'.xlsx';
+        $filename = $judul . '_' . $no . '.xlsx';
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\FormExport($mikrobiologi_form), $filename);
     }
 
@@ -368,7 +376,7 @@ class MikrobiologiFormController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
                     ->orWhere('no', 'like', "%$search%")
                     ->orWhere('tgl_inokulasi', 'like', "%$search%")
@@ -378,7 +386,7 @@ class MikrobiologiFormController extends Controller
 
         if ($request->filled('search_tgl')) {
             $search_tgl = $request->input('search_tgl');
-            $query->where(function($q) use ($search_tgl) {
+            $query->where(function ($q) use ($search_tgl) {
                 $q->whereDate('tgl_inokulasi', $search_tgl)
                     ->orWhereDate('tgl_pengamatan', $search_tgl);
             });
@@ -389,7 +397,25 @@ class MikrobiologiFormController extends Controller
         }
 
         if ($request->input('approval') === 'pending') {
-            $query->whereHas('signatures', function($q){ $q->where('status', 'accept'); }, '<', 3);
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
+            }, '<', 3);
+        } elseif ($request->input('approval') === 'completed') {
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
+            }, '=', 3);
+        } elseif ($request->input('approval') === 'technician') {
+            $query->whereDoesntHave('signatures', function ($q) {
+                $q->where('role', 'technician')->where('status', 'accept');
+            });
+        } elseif ($request->input('approval') === 'staff') {
+            $query->whereDoesntHave('signatures', function ($q) {
+                $q->where('role', 'staff')->where('status', 'accept');
+            });
+        } elseif ($request->input('approval') === 'supervisor') {
+            $query->whereDoesntHave('signatures', function ($q) {
+                $q->where('role', 'supervisor')->where('status', 'accept');
+            });
         }
 
         $ids = $query->pluck('id')->toArray();
@@ -405,24 +431,24 @@ class MikrobiologiFormController extends Controller
             $search = preg_replace('/[^A-Za-z0-9_\-]/', '_', $request->input('search'));
             $filenameParts[] = 'Search_' . substr($search, 0, 20);
         }
-        
+
         if ($request->filled('search_tgl')) {
             $search_tgl = preg_replace('/[^A-Za-z0-9_\-]/', '_', $request->input('search_tgl'));
             $filenameParts[] = 'Tanggal_' . $search_tgl;
         }
-        
+
         if ($request->filled('group_title')) {
             $group_title = preg_replace('/[^A-Za-z0-9_\-]/', '_', $request->input('group_title'));
             $filenameParts[] = 'Judul_' . substr($group_title, 0, 20);
         }
-        
+
         if ($request->input('approval') === 'pending') {
             $filenameParts[] = 'Pending_Approval';
         }
-        
+
         $filenameParts[] = now()->format('Ymd_His');
         $filename = implode('_', $filenameParts) . '.xlsx';
-        
+
         return Excel::download(new MikrobiologiCombinedExport($ids), $filename);
     }
 
@@ -430,15 +456,15 @@ class MikrobiologiFormController extends Controller
     {
         $columns = $mikrobiologi_form->columns()->orderBy('urutan')->get();
         $entries = $mikrobiologi_form->entries()->orderBy('id')->get();
-        $signatures = $mikrobiologi_form->signatures()->get()->sortBy(function($sig) {
+        $signatures = $mikrobiologi_form->signatures()->get()->sortBy(function ($sig) {
             $order = ['technician' => 1, 'staff' => 2, 'supervisor' => 3];
             return $order[$sig->role] ?? 4;
         });
         $observations = $mikrobiologi_form->observations()->orderBy('tanggal')->get();
-        
+
         $judul = preg_replace('/[^A-Za-z0-9_\-]/', '_', $mikrobiologi_form->title);
         $no = preg_replace('/[^A-Za-z0-9_\-]/', '_', $mikrobiologi_form->no);
-        $filename = $judul.'_'.$no.'.pdf';
+        $filename = $judul . '_' . $no . '.pdf';
 
         $html = view('mikrobiologi_forms.pdf', compact('mikrobiologi_form', 'columns', 'entries', 'signatures', 'observations'))->render();
 

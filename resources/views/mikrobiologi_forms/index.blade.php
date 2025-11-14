@@ -37,9 +37,9 @@
                                 <option value="">📋 Semua Approval</option>
                                 <option value="pending" {{ request('approval') == 'pending' ? 'selected' : '' }}>⏳ Belum Lengkap Semua</option>
                                 <option value="completed" {{ request('approval') == 'completed' ? 'selected' : '' }}>✅ Sudah Lengkap Semua</option>
-                                <option value="technician" {{ request('approval') == 'technician' ? 'selected' : '' }}>🔬 QA Lab. Technician</option>
-                                <option value="staff" {{ request('approval') == 'staff' ? 'selected' : '' }}>👥 QA Staff</option>
-                                <option value="supervisor" {{ request('approval') == 'supervisor' ? 'selected' : '' }}>👨‍💼 QA Supervisor</option>
+                                <option value="technician" {{ request('approval') == 'technician' ? 'selected' : '' }}>🔬 QA Lab. Technician (Belum Approve)</option>
+                                <option value="staff" {{ request('approval') == 'staff' ? 'selected' : '' }}>👥 QA Staff (Belum Approve)</option>
+                                <option value="supervisor" {{ request('approval') == 'supervisor' ? 'selected' : '' }}>👨‍💼 QA Supervisor (Belum Approve)</option>
                             </select>
                             @foreach(request()->except('approval', 'page') as $key => $val)
                                 <input type="hidden" name="{{ $key }}" value="{{ $val }}">

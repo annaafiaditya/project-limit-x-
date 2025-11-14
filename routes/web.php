@@ -175,15 +175,15 @@ Route::middleware(['auth'])->group(function () {
                 $q->where('status', 'accept');
             }, '=', 3);
         } elseif ($request->input('approval') === 'technician') {
-            $query->whereHas('signatures', function ($q) {
+            $query->whereDoesntHave('signatures', function ($q) {
                 $q->where('role', 'technician')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'staff') {
-            $query->whereHas('signatures', function ($q) {
+            $query->whereDoesntHave('signatures', function ($q) {
                 $q->where('role', 'staff')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'supervisor') {
-            $query->whereHas('signatures', function ($q) {
+            $query->whereDoesntHave('signatures', function ($q) {
                 $q->where('role', 'supervisor')->where('status', 'accept');
             });
         }
@@ -238,15 +238,15 @@ Route::middleware('auth')->group(function () {
                 $q->where('status', 'accept');
             }, '=', 3);
         } elseif ($request->input('approval') === 'technician') {
-            $query->whereHas('signatures', function ($q) {
+            $query->whereDoesntHave('signatures', function ($q) {
                 $q->where('role', 'technician')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'staff') {
-            $query->whereHas('signatures', function ($q) {
+            $query->whereDoesntHave('signatures', function ($q) {
                 $q->where('role', 'staff')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'supervisor') {
-            $query->whereHas('signatures', function ($q) {
+            $query->whereDoesntHave('signatures', function ($q) {
                 $q->where('role', 'supervisor')->where('status', 'accept');
             });
         }

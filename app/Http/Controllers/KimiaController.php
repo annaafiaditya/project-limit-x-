@@ -21,43 +21,43 @@ class KimiaController extends Controller
         $search_tgl = $request->input('search_tgl');
         $group_title = $request->input('group_title');
         $perPage = $request->input('perPage', 10);
-        
+
         $query = KimiaForm::query();
-        
+
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                  ->orWhere('no', 'like', "%$search%")
-                  ->orWhere('tanggal', 'like', "%$search%");
+                    ->orWhere('no', 'like', "%$search%")
+                    ->orWhere('tanggal', 'like', "%$search%");
             });
         }
-        
+
         if ($search_tgl) {
             $query->whereDate('tanggal', $search_tgl);
         }
-        
+
         if ($group_title) {
             $query->where('title', $group_title);
         }
 
         if ($request->input('approval') === 'pending') {
-            $query->whereHas('signatures', function($q){
+            $query->whereHas('signatures', function ($q) {
                 $q->where('status', 'accept');
             }, '<', 3);
         } elseif ($request->input('approval') === 'completed') {
-            $query->whereHas('signatures', function($q){
+            $query->whereHas('signatures', function ($q) {
                 $q->where('status', 'accept');
             }, '=', 3);
         } elseif ($request->input('approval') === 'technician') {
-            $query->whereHas('signatures', function($q){
+            $query->whereDoesntHave('signatures', function ($q) {
                 $q->where('role', 'technician')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'staff') {
-            $query->whereHas('signatures', function($q){
+            $query->whereDoesntHave('signatures', function ($q) {
                 $q->where('role', 'staff')->where('status', 'accept');
             });
         } elseif ($request->input('approval') === 'supervisor') {
-            $query->whereHas('signatures', function($q){
+            $query->whereDoesntHave('signatures', function ($q) {
                 $q->where('role', 'supervisor')->where('status', 'accept');
             });
         }
@@ -66,12 +66,12 @@ class KimiaController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)
             ->appends($request->except('page'));
-        
-        $titles = Cache::remember('kimia_distinct_titles', 120, function(){
+
+        $titles = Cache::remember('kimia_distinct_titles', 120, function () {
             return KimiaForm::select('title')->distinct()->orderBy('title')->pluck('title');
         });
         $template_titles = $titles;
-        
+
         return view('kimia_forms.index', compact('forms', 'search', 'search_tgl', 'group_title', 'titles', 'perPage', 'template_titles'));
     }
 
@@ -80,27 +80,31 @@ class KimiaController extends Controller
         $template = null;
         $tables = collect();
         $suggested_no = '';
-        
+
         if ($request->has('template_title')) {
             \Log::info('DEBUG KIMIA CREATE: template_title received', [$request->template_title]);
             $template = KimiaForm::where('title', $request->template_title)
-                ->with(['tables.columns' => function($q){ $q->orderBy('urutan'); }, 'tables.entries'])
+                ->with(['tables.columns' => function ($q) {
+                    $q->orderBy('urutan');
+                }, 'tables.entries'])
                 ->latest()->first();
             \Log::info('DEBUG KIMIA CREATE: template found', ['template_id' => $template ? $template->id : 'null', 'tables_count' => $template ? count($template->tables) : 0]);
             if ($template) {
-                $tables = $template->tables()->with(['columns' => function($q){ $q->orderBy('urutan'); }])->get();
+                $tables = $template->tables()->with(['columns' => function ($q) {
+                    $q->orderBy('urutan');
+                }])->get();
                 \Log::info('DEBUG KIMIA CREATE: tables loaded', ['tables_count' => $tables->count()]);
 
                 $lastFormWithSameTitle = KimiaForm::where('title', $template->title)
                     ->orderBy('created_at', 'desc')
                     ->first();
-                
+
                 // 01/LAMK/V/25
                 $currentMonth = date('n');
                 $currentYear = date('y');
                 $romanMonths = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
                 $romanMonth = $romanMonths[$currentMonth];
-                
+
                 if ($lastFormWithSameTitle) {
                     $lastNo = $lastFormWithSameTitle->no;
                     if (preg_match('/^(\d+)\//', $lastNo, $matches)) {
@@ -133,14 +137,16 @@ class KimiaController extends Controller
             'no' => 'required',
             'tanggal' => 'required|date',
         ]);
-        
+
         $validated['created_by'] = Auth::id();
         $form = null;
 
         if ($request->has('template_title')) {
             \Log::info('DEBUG KIMIA STORE: template_title received', [$request->template_title]);
             $template = KimiaForm::where('title', $request->template_title)
-                ->with(['tables.columns' => function($q){ $q->orderBy('urutan'); }, 'tables.entries'])
+                ->with(['tables.columns' => function ($q) {
+                    $q->orderBy('urutan');
+                }, 'tables.entries'])
                 ->latest()->first();
             \Log::info('DEBUG KIMIA STORE: template found', ['template_id' => $template ? $template->id : 'null', 'tables_count' => $template ? count($template->tables) : 0]);
             if ($template) {
@@ -148,7 +154,7 @@ class KimiaController extends Controller
                     'template_id' => $template->id,
                     'template_title' => $template->title,
                     'tables_count' => count($template->tables),
-                    'tables' => $template->tables->map(function($table) {
+                    'tables' => $template->tables->map(function ($table) {
                         return [
                             'id' => $table->id,
                             'name' => $table->name,
@@ -187,9 +193,9 @@ class KimiaController extends Controller
                     } elseif ($template && preg_match('/\d+\/([A-Z]+)\//', $template->no, $matches)) {
                         $jenis = $matches[1];
                     }
-                    
+
                     $validated['no'] = $nextNumber . '/' . $jenis . '/' . $romanMonth . '/' . $currentYear;
-                    
+
                     $form = KimiaForm::create($validated);
                     $latestForm = KimiaForm::whereNotNull('no_dokumen')
                         ->where('no_dokumen', '!=', '')
@@ -237,12 +243,12 @@ class KimiaController extends Controller
                 'form_id' => $form->id,
                 'name' => 'Tabel 1',
             ]);
-            
+
             if ($request->has('columns.nama_kolom')) {
                 $nama_kolom = $request->input('columns.nama_kolom');
                 $tipe_kolom = $request->input('columns.tipe_kolom');
                 $urutan = $request->input('columns.urutan');
-                
+
                 for ($i = 0; $i < count($nama_kolom); $i++) {
                     KimiaColumn::create([
                         'form_id' => $form->id,
@@ -254,15 +260,17 @@ class KimiaController extends Controller
                 }
             }
         }
-        
+
         return redirect()->route('kimia.show', ['kimia_form' => $form->id])->with('success', 'Form berhasil dibuat!');
     }
 
     public function show(KimiaForm $kimia_form)
     {
-        $tables = $kimia_form->tables()->with(['columns' => function($q){ $q->orderBy('urutan'); }, 'entries'])->get();
+        $tables = $kimia_form->tables()->with(['columns' => function ($q) {
+            $q->orderBy('urutan');
+        }, 'entries'])->get();
         $signatures = $kimia_form->signatures()->get()->keyBy('role');
-        
+
         return view('kimia_forms.show', [
             'form' => $kimia_form,
             'tables' => $tables,
@@ -287,9 +295,9 @@ class KimiaController extends Controller
         $validated = $request->validate([
             'name' => 'required|string'
         ]);
-        
+
         $kimiaTable->update($validated);
-        
+
         if ($request->wantsJson()) {
             return response()->json($kimiaTable);
         }
@@ -300,7 +308,7 @@ class KimiaController extends Controller
     {
         $form_id = $kimiaTable->form_id;
         $kimiaTable->delete();
-        
+
         return redirect()->route('kimia.show', ['kimia_form' => $form_id])->with('success', 'Tabel berhasil dihapus!');
     }
 
@@ -314,15 +322,15 @@ class KimiaController extends Controller
             'jumlah_kolom' => 'nullable|integer|min:1|max:10',
             'urutan' => 'nullable|integer',
         ]);
-        
+
         $jumlah_kolom = $validated['jumlah_kolom'] ?? 1;
         $created_columns = [];
-        
+
         $lastColumn = KimiaColumn::where('table_id', $validated['table_id'])
             ->orderBy('urutan', 'desc')
             ->first();
         $nextUrutan = $lastColumn ? $lastColumn->urutan + 1 : 1;
-        
+
         for ($i = 1; $i <= $jumlah_kolom; $i++) {
             $columnData = [
                 'form_id' => $validated['form_id'],
@@ -331,18 +339,18 @@ class KimiaController extends Controller
                 'tipe_kolom' => $validated['tipe_kolom'],
                 'urutan' => $nextUrutan + $i - 1,
             ];
-            
+
             $column = KimiaColumn::create($columnData);
             $created_columns[] = $column;
         }
-        
+
         if ($request->wantsJson()) {
             return response()->json([
                 'id' => $created_columns[0]->id,
                 'nama_kolom' => $created_columns[0]->nama_kolom,
                 'tipe_kolom' => $created_columns[0]->tipe_kolom,
                 'jumlah_created' => count($created_columns),
-                'columns' => collect($created_columns)->map(function($col) {
+                'columns' => collect($created_columns)->map(function ($col) {
                     return [
                         'id' => $col->id,
                         'nama_kolom' => $col->nama_kolom,
@@ -361,9 +369,9 @@ class KimiaController extends Controller
             'tipe_kolom' => 'required|in:string,integer,date,time,decimal',
             'urutan' => 'nullable|integer',
         ]);
-        
+
         $kimiaColumn->update($validated);
-        
+
         if ($request->wantsJson()) {
             return response()->json($kimiaColumn);
         }
@@ -373,7 +381,7 @@ class KimiaController extends Controller
     public function destroyColumn(KimiaColumn $kimiaColumn)
     {
         $kimiaColumn->delete();
-        
+
         return back()->with('success', 'Kolom berhasil dihapus!');
     }
 
@@ -384,13 +392,13 @@ class KimiaController extends Controller
             'table_id' => 'required|exists:kimia_tables,id',
             'data' => 'required|array',
         ]);
-        
+
         $entry = KimiaEntry::create($validated);
-        
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json($entry);
         }
-        
+
         return back()->with('success', 'Data entry berhasil ditambah!');
     }
 
@@ -417,7 +425,7 @@ class KimiaController extends Controller
     {
         $form_id = $kimiaEntry->form_id;
         $kimiaEntry->delete();
-        
+
         return redirect()->route('kimia.show', ['kimia_form' => $form_id])->with('success', 'Data entry berhasil dihapus!');
     }
 
@@ -433,13 +441,13 @@ class KimiaController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         if (!$user->canApprove($validated['role'])) {
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk approve role ini!');
         }
-        
+
         KimiaSignature::create($validated);
-        
+
         return redirect()->route('kimia.show', ['kimia_form' => $kimia_form->id])->with('success', 'Signature berhasil disimpan!');
     }
 
@@ -455,13 +463,13 @@ class KimiaController extends Controller
             'no' => 'required',
             'tanggal' => 'required|date',
         ]);
-        
+
         $kimia_form->update($validated);
-        
+
         if ($request->query('from') === 'show') {
             return redirect()->route('kimia.show', ['kimia_form' => $kimia_form->id])->with('success', 'Form berhasil diupdate!');
         }
-        
+
         return redirect()->route('kimia.index')->with('success', 'Form berhasil diupdate!');
     }
 
@@ -475,7 +483,7 @@ class KimiaController extends Controller
     {
         $judul = preg_replace('/[^A-Za-z0-9_\-]/', '_', $kimia_form->title);
         $no = preg_replace('/[^A-Za-z0-9_\-]/', '_', $kimia_form->no);
-        $filename = $judul.'_'.$no.'.xlsx';
+        $filename = $judul . '_' . $no . '.xlsx';
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\KimiaFormExport($kimia_form), $filename);
     }
 
@@ -485,10 +493,10 @@ class KimiaController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                  ->orWhere('no', 'like', "%$search%")
-                  ->orWhere('tanggal', 'like', "%$search%");
+                    ->orWhere('no', 'like', "%$search%")
+                    ->orWhere('tanggal', 'like', "%$search%");
             });
         }
 
@@ -501,15 +509,25 @@ class KimiaController extends Controller
         }
 
         if ($request->input('approval') === 'pending') {
-            $query->whereHas('signatures', function($q){ $q->where('status', 'accept'); }, '<', 3);
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
+            }, '<', 3);
         } elseif ($request->input('approval') === 'completed') {
-            $query->whereHas('signatures', function($q){ $q->where('status', 'accept'); }, '=', 3);
+            $query->whereHas('signatures', function ($q) {
+                $q->where('status', 'accept');
+            }, '=', 3);
         } elseif ($request->input('approval') === 'technician') {
-            $query->whereHas('signatures', function($q){ $q->where('role', 'technician')->where('status', 'accept'); });
+            $query->whereDoesntHave('signatures', function ($q) {
+                $q->where('role', 'technician')->where('status', 'accept');
+            });
         } elseif ($request->input('approval') === 'staff') {
-            $query->whereHas('signatures', function($q){ $q->where('role', 'staff')->where('status', 'accept'); });
+            $query->whereDoesntHave('signatures', function ($q) {
+                $q->where('role', 'staff')->where('status', 'accept');
+            });
         } elseif ($request->input('approval') === 'supervisor') {
-            $query->whereHas('signatures', function($q){ $q->where('role', 'supervisor')->where('status', 'accept'); });
+            $query->whereDoesntHave('signatures', function ($q) {
+                $q->where('role', 'supervisor')->where('status', 'accept');
+            });
         }
 
         $ids = $query->pluck('id')->toArray();
@@ -519,22 +537,22 @@ class KimiaController extends Controller
         }
 
         $filenameParts = ['Kimia'];
-        
+
         if ($request->filled('search')) {
             $search = preg_replace('/[^A-Za-z0-9_\-]/', '_', $request->input('search'));
             $filenameParts[] = 'Search_' . substr($search, 0, 20);
         }
-        
+
         if ($request->filled('search_tgl')) {
             $search_tgl = preg_replace('/[^A-Za-z0-9_\-]/', '_', $request->input('search_tgl'));
             $filenameParts[] = 'Tanggal_' . $search_tgl;
         }
-        
+
         if ($request->filled('group_title')) {
             $group_title = preg_replace('/[^A-Za-z0-9_\-]/', '_', $request->input('group_title'));
             $filenameParts[] = 'Judul_' . substr($group_title, 0, 20);
         }
-        
+
         if ($request->input('approval') === 'pending') {
             $filenameParts[] = 'Pending_Approval';
         } elseif ($request->input('approval') === 'completed') {
@@ -546,27 +564,29 @@ class KimiaController extends Controller
         } elseif ($request->input('approval') === 'supervisor') {
             $filenameParts[] = 'Supervisor_Approval';
         }
-        
+
         $filenameParts[] = now()->format('Ymd_His');
         $filename = implode('_', $filenameParts) . '.xlsx';
-        
+
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\KimiaCombinedExport($ids), $filename);
     }
 
     public function exportPdf(KimiaForm $kimia_form)
     {
-        $tables = $kimia_form->tables()->with(['columns' => function($q){ $q->orderBy('urutan'); }, 'entries'])->get();
-        $signatures = $kimia_form->signatures()->get()->sortBy(function($sig) {
+        $tables = $kimia_form->tables()->with(['columns' => function ($q) {
+            $q->orderBy('urutan');
+        }, 'entries'])->get();
+        $signatures = $kimia_form->signatures()->get()->sortBy(function ($sig) {
             $order = ['technician' => 1, 'staff' => 2, 'supervisor' => 3];
             return $order[$sig->role] ?? 4;
         });
-        
+
         $judul = preg_replace('/[^A-Za-z0-9_\-]/', '_', $kimia_form->title);
         $no = preg_replace('/[^A-Za-z0-9_\-]/', '_', $kimia_form->no);
-        $filename = $judul.'_'.$no.'.pdf';
-        
+        $filename = $judul . '_' . $no . '.pdf';
+
         $html = view('kimia_forms.pdf', compact('kimia_form', 'tables', 'signatures'))->render();
-        
+
         return response($html)
             ->header('Content-Type', 'text/html')
             ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
